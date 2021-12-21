@@ -1,0 +1,41 @@
+import torch
+import torch.nn as nn
+import ray.train as train
+
+from phetware.model.pytorch import DeepFM as deepfm_model
+from phetware.inputs import reformat_feature_columns
+from phetware import Epochvisor
+
+
+def DeepFM(config):
+    linear_feature_columns = config.get("linear_feature_columns")
+    dnn_feature_columns = config.get("dnn_feature_columns")
+    torch_dataset_options = config.get("torch_dataset_options")
+    epochs = config.get("epochs")
+    batch_size = config.get("batch_size")
+
+    # params setup
+    linear_feature_columns = reformat_feature_columns(linear_feature_columns)
+    dnn_feature_columns = reformat_feature_columns(dnn_feature_columns)
+
+    # dataset setup
+    train_dataset_shard = train.get_dataset_shard("train")
+    validation_dataset_shard = train.get_dataset_shard("validation")
+    train_dataset_iterator = train_dataset_shard.iter_datasets()
+    validation_dataset_iterator = validation_dataset_shard.iter_datasets()
+
+    # model setup
+    device = train.torch.get_device()
+    model = deepfm_model(linear_feature_columns, dnn_feature_columns, task='binary', device=device)
+    model = train.torch.prepare_model(model)
+    loss_fn = nn.BCELoss()
+    optimizer = torch.optim.Adam(model.parameters())
+
+    ep = Epochvisor(
+        epochs=epochs, train_dataset_iter=train_dataset_iterator,
+        validation_dataset_iter=validation_dataset_iterator,
+        dataset_options=torch_dataset_options,
+        batch_size=batch_size, model=model, loss_fn=loss_fn,
+        optimizer=optimizer, device=device)
+    
+    return ep.run_epochs()
