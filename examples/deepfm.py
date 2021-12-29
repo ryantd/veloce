@@ -15,18 +15,16 @@ RAND_SEED = 2021
 
 def get_dataset_and_fc():
     # preprocess dataset
-    # TODO(ryantd): chain or compress the map_batches and
-    # TODO(ryantd): fix global LabelEncoder and global MinMaxScaler
-    ds: ray.data.Dataset = ray.data.read_csv(
-        'examples/data/criteo_sample.txt',
-        convert_options=ConvertOptions(strings_can_be_null=True))
-    ds = ds.map_batches(fillna(sparse_features, "-1"), batch_format="pandas")
-    ds = ds.map_batches(fillna(dense_features, 0), batch_format="pandas")
-    ds = ds.map_batches(LabelEncoder(sparse_features), batch_format="pandas")
-    ds = ds.map_batches(MinMaxScaler(dense_features), batch_format="pandas")
+    ds = ray.data \
+        .read_csv(
+            'examples/data/criteo_sample.txt',
+            convert_options=ConvertOptions(strings_can_be_null=True)) \
+        .map_batches(fillna(sparse_features, "-1"), batch_format="pandas") \
+        .map_batches(fillna(dense_features, 0), batch_format="pandas") \
+        .map_batches(LabelEncoder(sparse_features), batch_format="pandas") \
+        .map_batches(MinMaxScaler(dense_features), batch_format="pandas")
 
     # process feature columns
-    # TODO(ryantd): can put fc into trainer.run dataset
     sparse_fc = ds.map_batches(
         SparseFeatureColumn(sparse_features), batch_format="pandas")
     dense_fc = ds.map_batches(
@@ -38,14 +36,13 @@ def get_dataset_and_fc():
 
     # split dataset
     split_index = int(ds.count() * SPLIT_FACTOR)
-    # TODO(ryantd): how to partition n times
     train_dataset, validation_dataset = \
         ds.random_shuffle(seed=RAND_SEED).split_at_indices([split_index])
     train_dataset_pipeline = \
         train_dataset.repeat().random_shuffle_each_window(seed=RAND_SEED)
     validation_dataset_pipeline = validation_dataset.repeat()
 
-    # result generating
+    # datasets and fcs generating
     datasets = {
         "train": train_dataset_pipeline,
         "validation": validation_dataset_pipeline
@@ -82,5 +79,5 @@ def train_deepfm_dist(num_workers=2, use_gpu=False):
 
 
 if __name__ == "__main__":
-    ray.init(num_cpus=3)
+    ray.init(num_cpus=1 + 2)
     train_deepfm_dist()
