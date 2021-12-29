@@ -2,12 +2,12 @@ import torch
 import torch.nn as nn
 import ray.train as train
 
-from phetware.model.pytorch import DeepFM as deepfm_model
+from phetware.model.pytorch import WideAndDeep as wdl_model
 from phetware.inputs import reformat_input_features
 from phetware import Epochvisor
 
 
-def DeepFM(config):
+def WideAndDeep(config):
     linear_feature_columns = config.get("linear_feature_columns")
     dnn_feature_columns = config.get("dnn_feature_columns")
     torch_dataset_options = config.get("torch_dataset_options")
@@ -26,7 +26,7 @@ def DeepFM(config):
 
     # model setup
     device = train.torch.get_device()
-    model = deepfm_model(linear_feature_columns, dnn_feature_columns, task='binary', device=device)
+    model = wdl_model(linear_feature_columns, dnn_feature_columns, task='binary', device=device)
     model = train.torch.prepare_model(model)
     loss_fn = nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters())
