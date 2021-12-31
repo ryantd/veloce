@@ -61,7 +61,7 @@ def train_deepfm_dist(num_workers=2, use_gpu=False):
     trainer.start()
     
     results = trainer.run(
-        train_func=DeepFM,
+        train_func=DeepFM(),
         dataset=datasets,
         config={
             "dnn_feature_columns": feature_columns["dnn"],

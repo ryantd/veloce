@@ -15,6 +15,7 @@ class Epochvisor(object):
         loss_fn,
         optimizer,
         device,
+        checkpoint,
         printable_batch_interval=10,
         verbose=0,
     ):
@@ -27,20 +28,21 @@ class Epochvisor(object):
         self.loss_fn = loss_fn
         self.optimizer = optimizer
         self.device = device
+        self.checkpoint = checkpoint
         self.printable_batch_interval = printable_batch_interval
         self.verbose = verbose
 
-    def run_epochs(self, checkpoint=None):
+    def train_and_validate_epochs(self):
         label_column = self.dataset_options["label_column"]
         feature_columns = self.dataset_options["feature_columns"]
         label_column_dtype = self.dataset_options["label_column_dtype"]
         feature_column_dtypes = self.dataset_options["feature_column_dtypes"]
         start_epoch = 0
 
-        if checkpoint:
-            model_state_dict = checkpoint.get("model_state_dict", None)
-            optimizer_state_dict = checkpoint.get("optimizer_state_dict", None)
-            start_epoch = checkpoint.get("epoch", -1) + 1
+        if self.checkpoint:
+            model_state_dict = self.checkpoint.get("model_state_dict", None)
+            optimizer_state_dict = self.checkpoint.get("optimizer_state_dict", None)
+            start_epoch = self.checkpoint.get("epoch", -1) + 1
 
             self.model.load_state_dict(model_state_dict)
             self.optimizer.load_state_dict(optimizer_state_dict)

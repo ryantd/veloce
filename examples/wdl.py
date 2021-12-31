@@ -62,7 +62,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False):
     trainer.start()
     
     results = trainer.run(
-        train_func=WideAndDeep,
+        train_func=WideAndDeep(),
         dataset=datasets,
         callbacks=[JsonLoggerCallback(), TBXLoggerCallback()],
         config={
