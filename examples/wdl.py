@@ -1,6 +1,7 @@
 import torch
 import ray
 from ray.train import Trainer
+from ray.train.callbacks import JsonLoggerCallback, TBXLoggerCallback
 from pyarrow.csv import ConvertOptions
 
 from phetware.train_fn import WideAndDeep
@@ -63,6 +64,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False):
     results = trainer.run(
         train_func=WideAndDeep,
         dataset=datasets,
+        callbacks=[JsonLoggerCallback(), TBXLoggerCallback()],
         config={
             "dnn_feature_columns": feature_columns["dnn"],
             "linear_feature_columns": feature_columns["linear"],
@@ -75,7 +77,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False):
                 feature_column_dtypes=[torch.float] * (len(sparse_features) + len(dense_features)))
         })
     trainer.shutdown()
-    print(f"Results: {results[0]}")
+    print(f"Loss results: {results[0]}")
 
 
 if __name__ == "__main__":

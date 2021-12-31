@@ -30,7 +30,6 @@ class Epochvisor(object):
         self.printable_batch_interval = printable_batch_interval
         self.verbose = verbose
 
-
     def run_epochs(self):
         label_column = self.dataset_options["label_column"]
         feature_columns = self.dataset_options["feature_columns"]
@@ -62,10 +61,9 @@ class Epochvisor(object):
             results.append(result)
         return results
 
-
     def train_epoch(self, train_iterable_ds):
         self.model.train()
-        for batch_id, (X, y) in enumerate(train_iterable_ds):
+        for _, (X, y) in enumerate(train_iterable_ds):
             X = X.to(self.device)
             y = y.to(self.device)
 
@@ -75,32 +73,18 @@ class Epochvisor(object):
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()
-            
-            if batch_id % self.printable_batch_interval == 0:
-                self.log_loss_by_batch(loss.item(), batch_id, "train")
-
 
     def validate_epoch(self, validation_iterable_ds):
         num_batches = 0
         self.model.eval()
         loss = 0
         with torch.no_grad():
-            for batch_id, (X, y) in enumerate(validation_iterable_ds):
+            for _, (X, y) in enumerate(validation_iterable_ds):
                 X = X.to(self.device)
                 y = y.to(self.device)
                 num_batches += 1
                 pred = self.model(X)
                 loss += self.loss_fn(pred, y).item()
-
-                if batch_id % self.printable_batch_interval == 0:
-                    self.log_loss_by_batch(loss, batch_id, "validate")
         loss /= num_batches
         result = {"loss": loss}
         return result
-
-
-    def log_loss_by_batch(self, loss_val, batch_id, epoch_type):
-        if self.verbose > 0:
-            print(
-                f"{epoch_type:>8} loss: {loss_val:>7f}  "
-                f"[{batch_id * self.batch_size:>5d}]")
