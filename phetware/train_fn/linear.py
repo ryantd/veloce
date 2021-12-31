@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import ray.train as train
 
-from phetware.model.pytorch import OneLinear
+from phetware.model.torch import OneLinear
 from phetware import Epochvisor
 
 

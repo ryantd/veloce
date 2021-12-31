@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import ray.train as train
 
-from phetware.model.pytorch import DeepFM as deepfm_model
+from phetware.model.torch import DeepFM as deepfm_model
 from phetware.inputs import reformat_input_features
 from phetware import Epochvisor
 
@@ -30,6 +30,7 @@ def DeepFM(config):
     model = train.torch.prepare_model(model)
     loss_fn = nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters())
+    checkpoint = train.load_checkpoint() or None
 
     ep = Epochvisor(
         epochs=epochs, train_dataset_iter=train_dataset_iterator,
@@ -37,5 +38,5 @@ def DeepFM(config):
         dataset_options=torch_dataset_options,
         batch_size=batch_size, model=model, loss_fn=loss_fn,
         optimizer=optimizer, device=device)
-    
-    return ep.run_epochs()
+
+    return ep.run_epochs(checkpoint)

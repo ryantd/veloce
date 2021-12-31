@@ -30,14 +30,23 @@ class Epochvisor(object):
         self.printable_batch_interval = printable_batch_interval
         self.verbose = verbose
 
-    def run_epochs(self):
+    def run_epochs(self, checkpoint=None):
         label_column = self.dataset_options["label_column"]
         feature_columns = self.dataset_options["feature_columns"]
         label_column_dtype = self.dataset_options["label_column_dtype"]
         feature_column_dtypes = self.dataset_options["feature_column_dtypes"]
+        start_epoch = 0
+
+        if checkpoint:
+            model_state_dict = checkpoint.get("model_state_dict", None)
+            optimizer_state_dict = checkpoint.get("optimizer_state_dict", None)
+            start_epoch = checkpoint.get("epoch", -1) + 1
+
+            self.model.load_state_dict(model_state_dict)
+            self.optimizer.load_state_dict(optimizer_state_dict)
 
         results = []
-        for _ in range(self.epochs):
+        for epoch_id in range(start_epoch, self.epochs):
             train_dataset = next(self.train_dataset_iter)
             validation_dataset = next(self.validation_dataset_iter)
 
@@ -57,6 +66,10 @@ class Epochvisor(object):
 
             self.train_epoch(train_torch_dataset)
             result = self.validate_epoch(validation_torch_dataset)
+            train.save_checkpoint(
+                epoch=epoch_id,
+                model_state_dict=self.model.state_dict(),
+                optimizer_state_dict=self.optimizer.state_dict())
             train.report(**result)
             results.append(result)
         return results
