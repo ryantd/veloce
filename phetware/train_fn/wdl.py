@@ -12,4 +12,4 @@ class WideAndDeep(BaseTrainFn):
             self.dnn_feature_columns,
             task='binary', device=self.device))
         self.setup_model(model=model)
-        return self.train_and_validate_epochs()
+        return self.run_epochs()

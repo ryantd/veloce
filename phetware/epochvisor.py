@@ -7,32 +7,36 @@ class Epochvisor(object):
         self,
         epochs,
         *,
-        train_dataset_iter,
-        validation_dataset_iter,
         dataset_options,
         batch_size,
         model,
         loss_fn,
         optimizer,
+        metric_fn,
         device,
         checkpoint,
+        train_dataset_iter,
+        validation_dataset_iter=None,
+        test_dataset_iter=None,
         printable_batch_interval=10,
         verbose=0,
     ):
         self.epochs = epochs
         self.train_dataset_iter = train_dataset_iter
         self.validation_dataset_iter = validation_dataset_iter
+        self.test_dataset_iter = test_dataset_iter
         self.dataset_options = dataset_options
         self.batch_size = batch_size
         self.model = model
         self.loss_fn = loss_fn
         self.optimizer = optimizer
+        self.metric_fn = metric_fn
         self.device = device
         self.checkpoint = checkpoint
         self.printable_batch_interval = printable_batch_interval
         self.verbose = verbose
 
-    def train_and_validate_epochs(self):
+    def run_epochs(self):
         label_column = self.dataset_options["label_column"]
         feature_columns = self.dataset_options["feature_columns"]
         label_column_dtype = self.dataset_options["label_column_dtype"]
@@ -50,8 +54,6 @@ class Epochvisor(object):
         results = []
         for epoch_id in range(start_epoch, self.epochs):
             train_dataset = next(self.train_dataset_iter)
-            validation_dataset = next(self.validation_dataset_iter)
-
             train_torch_dataset = train_dataset.to_torch(
                 label_column=label_column,
                 feature_columns=feature_columns,
@@ -59,15 +61,28 @@ class Epochvisor(object):
                 feature_column_dtypes=feature_column_dtypes,
                 batch_size=self.batch_size,
             )
-            validation_torch_dataset = validation_dataset.to_torch(
-                label_column=label_column,
-                feature_columns=feature_columns,
-                label_column_dtype=label_column_dtype,
-                feature_column_dtypes=feature_column_dtypes,
-                batch_size=self.batch_size)
-
             self.train_epoch(train_torch_dataset)
-            result = self.validate_epoch(validation_torch_dataset)
+
+            if self.validation_dataset_iter:
+                validation_dataset = next(self.validation_dataset_iter)
+                validation_torch_dataset = validation_dataset.to_torch(
+                    label_column=label_column,
+                    feature_columns=feature_columns,
+                    label_column_dtype=label_column_dtype,
+                    feature_column_dtypes=feature_column_dtypes,
+                    batch_size=self.batch_size)
+                self.validate_epoch(validation_torch_dataset)
+            
+            if self.test_dataset_iter:
+                test_dataset = next(self.test_dataset_iter)
+                test_torch_dataset = test_dataset.to_torch(
+                    label_column=label_column,
+                    feature_columns=feature_columns,
+                    label_column_dtype=label_column_dtype,
+                    feature_column_dtypes=feature_column_dtypes,
+                    batch_size=self.batch_size)
+                result = self.test_epoch(test_torch_dataset)
+
             train.save_checkpoint(
                 epoch=epoch_id,
                 model_state_dict=self.model.state_dict(),
@@ -102,4 +117,15 @@ class Epochvisor(object):
                 loss += self.loss_fn(pred, y).item()
         loss /= num_batches
         result = {"loss": loss}
+        return result
+    
+    def test_epoch(self, test_iterable_ds):
+        for _, (X, y) in enumerate(test_iterable_ds):
+            X = X.to(self.device)
+            y = y.to(self.device).int()
+            pred = self.model(X)
+            auc = self.metric_fn(pred, y)
+        auc = self.metric_fn.compute().item()
+        result = {"auc": auc}
+        self.metric_fn.reset()
         return result

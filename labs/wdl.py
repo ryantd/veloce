@@ -10,7 +10,8 @@ from phetware.feature_column import SparseFeatureColumn, DenseFeatureColumn
 
 sparse_features = [f'C{i}' for i in range(1, 27)]
 dense_features = [f'I{i}' for i in range(1, 14)]
-SPLIT_FACTOR = 0.8
+VALID_SPLIT_FACTOR = 0.8
+TEST_SPLIT_FACTOR = 0.9
 RAND_SEED = 2021
 
 
@@ -35,17 +36,20 @@ def get_dataset_and_fc():
     linear_feature_columns = dense_fc.to_pandas().to_dict('records')
 
     # split dataset
-    split_index = int(ds.count() * SPLIT_FACTOR)
-    train_dataset, validation_dataset = \
-        ds.random_shuffle(seed=RAND_SEED).split_at_indices([split_index])
+    valid_idx = int(ds.count() * VALID_SPLIT_FACTOR)
+    test_idx = int(ds.count() * TEST_SPLIT_FACTOR)
+    train_dataset, validation_dataset, test_dataset = \
+        ds.random_shuffle(seed=RAND_SEED).split_at_indices([valid_idx, test_idx])
     train_dataset_pipeline = \
         train_dataset.repeat().random_shuffle_each_window(seed=RAND_SEED)
     validation_dataset_pipeline = validation_dataset.repeat()
+    test_dataset_pipeline = test_dataset.repeat()
 
     # datasets and fcs generating
     datasets = {
         "train": train_dataset_pipeline,
-        "validation": validation_dataset_pipeline
+        "validation": validation_dataset_pipeline,
+        "test": test_dataset_pipeline
     }
     feature_columns = {
         "dnn": dnn_feature_columns,
@@ -67,7 +71,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False):
         config={
             "dnn_feature_columns": feature_columns["dnn"],
             "linear_feature_columns": feature_columns["linear"],
-            "epochs": 10,
+            "epochs": 100,
             "batch_size": 256,
             "torch_dataset_options": dict(
                 label_column="label",
@@ -76,7 +80,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False):
                 feature_column_dtypes=[torch.float] * (len(sparse_features) + len(dense_features)))
         })
     trainer.shutdown()
-    print(f"Loss results: {results[0]}")
+    print(f"Results: {results[0]}")
 
 
 if __name__ == "__main__":
