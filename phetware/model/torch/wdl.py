@@ -1,7 +1,7 @@
 import torch.nn as nn
 
 from phetware.layer import DNN, OutputLayer
-from phetware.inputs import concat_dnn_inputs, compute_inputs_dim, embedding_dict_gen
+from phetware.inputs import concat_dnn_inputs, compute_inputs_dim, embedding_dict_gen, collect_inputs_and_embeddings
 from .base import BaseModel, Linear
 
 
@@ -62,7 +62,11 @@ class WideAndDeep(BaseModel):
         self.to(device)
 
     def forward(self, X):
-        sparse_embeddings, dense_values = self.collect_dnn_inputs(X, self.dnn_embedding_layer)
+        dense_values, sparse_embeddings = collect_inputs_and_embeddings(
+            X, sparse_feature_columns=self.fcs.dnn_sparse_fcs,
+            dense_feature_columns=self.fcs.dnn_dence_fcs,
+            feature_name_to_index=self.feature_name_to_index,
+            embedding_layer_def=self.dnn_embedding_layer)
         logit = self.wide_model(X)
 
         if self.use_dnn:

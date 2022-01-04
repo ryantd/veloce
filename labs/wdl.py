@@ -30,10 +30,9 @@ def get_dataset_and_fc():
         SparseFeatureColumn(sparse_features), batch_format="pandas")
     dense_fc = ds.map_batches(
         DenseFeatureColumn(dense_features), batch_format="pandas")
-    fixlen_feature_columns = sparse_fc.to_pandas().to_dict('records') + \
-        dense_fc.to_pandas().to_dict('records')
-    dnn_feature_columns = fixlen_feature_columns
-    linear_feature_columns = fixlen_feature_columns
+    fixlen_fc = sparse_fc.to_pandas().to_dict('records') + dense_fc.to_pandas().to_dict('records')
+    dnn_feature_columns = fixlen_fc
+    linear_feature_columns = dense_fc.to_pandas().to_dict('records')
 
     # split dataset
     split_index = int(ds.count() * SPLIT_FACTOR)

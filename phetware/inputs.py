@@ -99,7 +99,6 @@ def compute_inputs_dim(
         include_sparse=True, include_dense=True, feature_group=False
     ):
         input_dim = 0
-        
         dense_input_dim = sum(
             map(lambda x: x.dimension, dense_feature_columns))
         if feature_group:
@@ -112,3 +111,21 @@ def compute_inputs_dim(
         if include_dense:
             input_dim += dense_input_dim
         return input_dim
+
+
+def collect_inputs_and_embeddings(
+        X, sparse_feature_columns, dense_feature_columns,
+        feature_name_to_index, embedding_layer_def=None
+    ):
+        # embeddings part
+        if not embedding_layer_def:
+            sparse_embeddings = []
+        else:
+            sparse_embeddings = [embedding_layer_def[feat.embedding_name](X[
+                :, feature_name_to_index[feat.name][0]: feature_name_to_index[feat.name][1]
+            ].long()) for feat in sparse_feature_columns]
+        # dense inputs part
+        dense_values = [X[
+            :, feature_name_to_index[feat.name][0]: feature_name_to_index[feat.name][1]
+        ] for feat in dense_feature_columns]
+        return dense_values, sparse_embeddings

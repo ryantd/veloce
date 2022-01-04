@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from phetware.inputs import embedding_dict_gen, build_feature_named_index_mapping
+from phetware.inputs import embedding_dict_gen, build_feature_named_index_mapping, collect_inputs_and_embeddings
 from phetware.feature_column import FeatureColumnSet
 
 
@@ -34,18 +34,6 @@ class BaseModel(nn.Module):
             weight_list = list(weight_list)
         self.regularization_weight.append((weight_list, l1, l2))
         return self.regularization_weight
-    
-    def collect_dnn_inputs(self, X, embedding_layer_def=None):
-        if not embedding_layer_def:
-            raise ValueError("embedding_layer_def must be given")
-        name_to_idx_dict = self.feature_name_to_index
-        sparse_embeddings = [embedding_layer_def[feat.embedding_name](X[
-            :, name_to_idx_dict[feat.name][0]: name_to_idx_dict[feat.name][1]
-        ].long()) for feat in self.fcs.dnn_sparse_fcs]
-        dense_values = [X[
-            :, name_to_idx_dict[feat.name][0]: name_to_idx_dict[feat.name][1]
-        ] for feat in self.fcs.dnn_dence_fcs]
-        return sparse_embeddings, dense_values
 
 
 class Linear(nn.Module):
@@ -72,16 +60,15 @@ class Linear(nn.Module):
             torch.nn.init.normal_(self.weight, mean=0, std=init_std)
 
     def forward(self, X, sparse_feat_refine_weight=None):
-        sparse_embeddings = [self.linear_embedding_dict[feat.embedding_name](X[
-            :, self.feature_name_to_index[feat.name][0]:self.feature_name_to_index[feat.name][1]
-        ].long()) for feat in self.sparse_feature_columns]
-        dense_values = [X[
-            :, self.feature_name_to_index[feat.name][0]:self.feature_name_to_index[feat.name][1]
-        ] for feat in self.dense_feature_columns]
+        dense_values, sparse_embeddings = collect_inputs_and_embeddings(
+            X, sparse_feature_columns=self.sparse_feature_columns,
+            dense_feature_columns=self.dense_feature_columns,
+            feature_name_to_index=self.feature_name_to_index,
+            embedding_layer_def=self.linear_embedding_dict)
 
-        linear_logit = torch.zeros(
-            [X.shape[0], 1]).to(sparse_embeddings[0].device)
+        linear_logit = torch.zeros([X.shape[0], 1]).to(self.device)
         if len(sparse_embeddings) > 0:
+            linear_logit = linear_logit.to(sparse_embeddings[0].device)
             sparse_embedding_cat = torch.cat(sparse_embeddings, dim=-1)
             if sparse_feat_refine_weight is not None:
                 sparse_embedding_cat = sparse_embedding_cat * sparse_feat_refine_weight.unsqueeze(1)
