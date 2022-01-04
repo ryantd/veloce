@@ -18,7 +18,7 @@ def get_dataset_and_fc():
     # preprocess dataset
     ds = ray.data \
         .read_csv(
-            'examples/data/criteo_sample.txt',
+            'labs/data/criteo_sample.txt',
             convert_options=ConvertOptions(strings_can_be_null=True)) \
         .map_batches(fillna(sparse_features, "-1"), batch_format="pandas") \
         .map_batches(fillna(dense_features, 0), batch_format="pandas") \
