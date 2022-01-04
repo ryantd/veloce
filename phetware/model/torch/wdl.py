@@ -32,14 +32,14 @@ class WideAndDeep(BaseModel):
                 use_bn=dnn_use_bn,
                 init_std=init_std,
                 device=device)
-            self.dnn_linear = nn.Linear(
+            self.final_linear = nn.Linear(
                 dnn_hidden_units[-1], 1, bias=False).to(device)
 
             self.add_regularization_weight(filter(
                 lambda x: 'weight' in x[0] and 'bn' not in x[0],
                 self.dnn_model.named_parameters()), l2=l2_reg_dnn)
             self.add_regularization_weight(
-                self.dnn_linear.weight, l2=l2_reg_dnn)
+                self.final_linear.weight, l2=l2_reg_dnn)
         self.to(device)
 
     def forward(self, X):
@@ -49,7 +49,7 @@ class WideAndDeep(BaseModel):
         if self.use_dnn:
             dnn_input = concat_dnn_inputs(sparse_embeddings, dense_values)
             dnn_output = self.dnn_model(dnn_input)
-            dnn_logit = self.dnn_linear(dnn_output)
+            dnn_logit = self.final_linear(dnn_output)
             logit += dnn_logit
         y = self.output(logit)
         return y
