@@ -1,43 +1,30 @@
 import torch
 import torch.nn as nn
 
-from phetware.inputs import build_embedding_dict, build_feature_named_index_mapping
-from phetware.layer import OutputLayer
+from phetware.inputs import embedding_dict_gen, build_feature_named_index_mapping
 from phetware.feature_column import FeatureColumnSet
 
 
 class BaseModel(nn.Module):
     def __init__(
-        self, linear_feature_columns, dnn_feature_columns, l2_reg_linear=1e-5,
-        l2_reg_embedding=1e-5, init_std=0.0001, seed=1024, task='binary',
+        self, linear_feature_columns, dnn_feature_columns, seed=1024,
         device='cpu'
     ):
         super(BaseModel, self).__init__()
+        torch.manual_seed(seed)
         self.device = device
-        
+        self.regularization_weight = []
+
+        # produce dense and sparse fcs on dnn and linear inputs respectively
         self.fcs = FeatureColumnSet(
             linear_feature_columns=linear_feature_columns,
             dnn_feature_columns=dnn_feature_columns)
         self.fcs.sorter()
+
+        # produce mapping from feature names to columns index
         self.feature_name_to_index = build_feature_named_index_mapping(
             self.fcs.all_fcs)
-        self.dnn_embedding_dict = build_embedding_dict(
-            self.fcs.dnn_sparse_fcs,
-            init_std=init_std, sparse=False,
-            device=device)
-        self.linear_model = Linear(
-            sparse_feature_columns=self.fcs.linear_sparse_fcs,
-            dense_feature_columns=self.fcs.linear_dence_fcs,
-            feature_named_index_mapping=self.feature_name_to_index,
-            device=device)
-        
-        self.regularization_weight = []
-        self.add_regularization_weight(
-            self.dnn_embedding_dict.parameters(), l2=l2_reg_embedding)
-        self.add_regularization_weight(
-            self.linear_model.parameters(), l2=l2_reg_linear)
 
-        self.output = OutputLayer(task)
         self.to(device)
 
     def add_regularization_weight(self, weight_list, l1=0.0, l2=0.0):
@@ -48,20 +35,16 @@ class BaseModel(nn.Module):
         self.regularization_weight.append((weight_list, l1, l2))
         return self.regularization_weight
     
-    def fetch_dnn_inputs(self, X, support_dense=True):
-        sparse_feature_columns = self.fcs.dnn_sparse_fcs
-        dense_feature_columns = self.fcs.dnn_dence_fcs
-
-        if not support_dense and len(dense_feature_columns) > 0:
-            raise ValueError(
-                "DenseFeat is not supported in dnn_feature_columns")
-
-        sparse_embeddings = [self.dnn_embedding_dict[feat.embedding_name](X[
-            :, self.feature_name_to_index[feat.name][0]: self.feature_name_to_index[feat.name][1]
-        ].long()) for feat in sparse_feature_columns]
+    def collect_dnn_inputs(self, X, embedding_layer_def=None):
+        if not embedding_layer_def:
+            raise ValueError("embedding_layer_def must be given")
+        name_to_idx_dict = self.feature_name_to_index
+        sparse_embeddings = [embedding_layer_def[feat.embedding_name](X[
+            :, name_to_idx_dict[feat.name][0]: name_to_idx_dict[feat.name][1]
+        ].long()) for feat in self.fcs.dnn_sparse_fcs]
         dense_values = [X[
-            :, self.feature_name_to_index[feat.name][0]: self.feature_name_to_index[feat.name][1]
-        ] for feat in dense_feature_columns]
+            :, name_to_idx_dict[feat.name][0]: name_to_idx_dict[feat.name][1]
+        ] for feat in self.fcs.dnn_dence_fcs]
         return sparse_embeddings, dense_values
 
 
@@ -76,7 +59,7 @@ class Linear(nn.Module):
         self.sparse_feature_columns = sparse_feature_columns
         self.dense_feature_columns = dense_feature_columns
 
-        self.linear_embedding_dict = build_embedding_dict(
+        self.linear_embedding_dict = embedding_dict_gen(
             self.sparse_feature_columns,
             init_std, linear=True, sparse=False,
             device=device)

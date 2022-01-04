@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.nn.modules import sparse
 
 from phetware.layer import FM, DNN
-from phetware.inputs import concat_dnn_inputs, compute_input_dim
+from phetware.inputs import concat_dnn_inputs, compute_inputs_dim
 from .base import BaseModel
 
 
@@ -28,7 +28,7 @@ class DeepFM(BaseModel):
         
         if self.use_dnn:
             self.dnn_model = DNN(
-                compute_input_dim(
+                compute_inputs_dim(
                     sparse_feature_columns=self.fcs.dnn_sparse_fcs,
                     dense_feature_columns=self.fcs.dnn_dence_fcs),
                 dnn_hidden_units,

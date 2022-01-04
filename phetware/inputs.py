@@ -80,7 +80,7 @@ def concat_dnn_inputs(sparse_embedding_list, dense_value_list):
         raise NotImplementedError
 
 
-def build_embedding_dict(sparse_feature_columns, init_std=0.0001, linear=False, sparse=False, device='cpu'):
+def embedding_dict_gen(sparse_feature_columns, init_std=0.0001, linear=False, sparse=False, device='cpu'):
     embedding_dict = nn.ModuleDict({
         feat.embedding_name: nn.Embedding(
             feat.vocabulary_size,
@@ -94,7 +94,7 @@ def build_embedding_dict(sparse_feature_columns, init_std=0.0001, linear=False, 
     return embedding_dict.to(device)
 
 
-def compute_input_dim(
+def compute_inputs_dim(
         sparse_feature_columns, dense_feature_columns,
         include_sparse=True, include_dense=True, feature_group=False
     ):

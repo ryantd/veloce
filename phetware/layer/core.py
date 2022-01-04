@@ -20,22 +20,19 @@ class DNN(nn.Module):
         self.use_bn = use_bn
         hidden_units = [inputs_dim] + list(hidden_units)
 
-        self.linear_layers = nn.ModuleList(
-            [nn.Linear(
-                hidden_units[i],
-                hidden_units[i + 1]) for i in range(len(hidden_units) - 1)
-            ])
+        # setup layers of dnn network
+        self.linear_layers = nn.ModuleList()
+        self.activation_layers = nn.ModuleList()
         if self.use_bn:
-            self.bn_layers = nn.ModuleList(
-                [nn.BatchNorm1d(
-                    hidden_units[i + 1]) for i in range(len(hidden_units) - 1)
-                ])
-        self.activation_layers = nn.ModuleList(
-            [activation_gen(
-                activation,
-                hidden_units[i + 1],
-                dice_dim) for i in range(len(hidden_units) - 1)
-            ])
+            self.bn_layers = nn.ModuleList()
+        
+        for i in range(len(hidden_units) - 1):
+            self.linear_layers.append(
+                nn.Linear(hidden_units[i], hidden_units[i + 1]))
+            self.activation_layers.append(
+                activation_gen(activation, hidden_units[i + 1], dice_dim))
+            if self.use_bn:
+                self.bn_layers.append(nn.BatchNorm1d(hidden_units[i + 1]))
 
         for name, tensor in self.linear_layers.named_parameters():
             if 'weight' in name:
@@ -44,15 +41,15 @@ class DNN(nn.Module):
         self.to(device)
 
     def forward(self, inputs):
-        cur_input = inputs
+        current = inputs
         for i in range(len(self.linear_layers)):
-            layer_out = self.linear_layers[i](cur_input)
+            layer_out = self.linear_layers[i](current)
             if self.use_bn:
                 layer_out = self.bn_layers[i](layer_out)
             layer_out = self.activation_layers[i](layer_out)
             layer_out = self.dropout(layer_out)
-            cur_input = layer_out
-        return cur_input
+            current = layer_out
+        return current
 
 
 class OutputLayer(nn.Module):
