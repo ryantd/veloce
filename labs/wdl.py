@@ -73,6 +73,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False):
             "linear_feature_columns": feature_columns["linear"],
             "epochs": 100,
             "batch_size": 256,
+            "dnn_dropout": 0.2,
             "torch_dataset_options": dict(
                 label_column="label",
                 feature_columns=sparse_features + dense_features,

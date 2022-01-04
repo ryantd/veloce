@@ -9,7 +9,7 @@ class WideAndDeep(BaseModel):
     def __init__(
         self,
         linear_feature_columns, dnn_feature_columns, dnn_hidden_units=(256, 128),
-        l2_reg_linear=1e-5, l2_reg_embedding=1e-5, l2_reg_dnn=0,
+        l2_reg_linear=1e-4, l2_reg_embedding=1e-4, l2_reg_dnn=0,
         init_std=0.0001, seed=1024, dnn_dropout=0, dnn_activation='relu',
         dnn_use_bn=False, task='binary', device='cpu'
     ):
