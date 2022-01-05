@@ -11,6 +11,7 @@ from phetware.train_fn import WideAndDeep
 from phetware.preprocessing import fillna, MinMaxScaler, LabelEncoder
 from phetware.feature_column import SparseFeatureColumn, DenseFeatureColumn
 from phetware.optimizer import OptimizerStack, FTRL
+from phetware.loss_fn import LossFnStack
 
 sparse_features = [f'C{i}' for i in range(1, 27)]
 dense_features = [f'I{i}' for i in range(1, 14)]
@@ -81,7 +82,8 @@ def train_wdl_dist(num_workers=2, use_gpu=False):
             "batch_size": 256,
             "dnn_dropout": 0.2,
             "seed": RAND_SEED,
-            "loss_fn": nn.BCELoss(),
+            "loss_fn": LossFnStack(
+                dict(fn=nn.BCELoss(), weight=0.8), dict(fn=nn.MSELoss(), weight=0.2)),
             # support multiple optimizers
             "optimizer": OptimizerStack(
                 dict(cls=torch.optim.Adagrad, model_key="deep_model"),
