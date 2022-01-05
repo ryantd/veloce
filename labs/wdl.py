@@ -10,6 +10,7 @@ from sklearn.metrics import log_loss
 from phetware.train_fn import WideAndDeep
 from phetware.preprocessing import fillna, MinMaxScaler, LabelEncoder
 from phetware.feature_column import SparseFeatureColumn, DenseFeatureColumn
+from phetware.optimizer import OptimizerStack, FTRL
 
 sparse_features = [f'C{i}' for i in range(1, 27)]
 dense_features = [f'I{i}' for i in range(1, 14)]
@@ -79,10 +80,14 @@ def train_wdl_dist(num_workers=2, use_gpu=False):
             "dnn_dropout": 0.2,
             "seed": RAND_SEED,
             "loss_fn": nn.BCELoss(),
+            # support multiple optimizers
+            "optimizer": OptimizerStack(
+                dict(cls=torch.optim.Adagrad, model_key="deep_model"),
+                dict(cls=FTRL, args=dict(alpha=1.0, beta=1.0, l1=1.0, l2=1.0), model_key="wide_model")),
+            # support torchmetrics and sklearn metric funcs
             "metric_fns": [torchmetrics.AUROC(), log_loss],
             "output_fn": torch.softmax,
-            "output_fn_args": dict(
-                dim=0),
+            "output_fn_args": dict(dim=0),
             "torch_dataset_options": dict(
                 label_column="label",
                 feature_columns=sparse_features + dense_features,
@@ -90,7 +95,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False):
                 feature_column_dtypes=[torch.float] * (len(sparse_features) + len(dense_features)))
         })
     trainer.shutdown()
-    print(f"Results: {results[0][-1]}")
+    print(f"Results: {results[0][-1]}") # AUROC: 0.5934, log_loss: 0.9316
 
 
 if __name__ == "__main__":

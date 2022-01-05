@@ -9,11 +9,13 @@ from .base import BaseModel, Linear
 class WideAndDeep(BaseModel):
     def __init__(
         self,
-        linear_feature_columns, dnn_feature_columns, dnn_hidden_units=(256, 128),
-        l2_reg_linear=1e-4, l2_reg_embedding=1e-4, l2_reg_dnn=0,
-        init_std=0.0001, seed=1024, dnn_dropout=0, dnn_activation='relu',
-        dnn_use_bn=False, output_fn=torch.sigmoid, output_fn_args=None,
-        device='cpu'
+        # base configs
+        linear_feature_columns, dnn_feature_columns, seed=1024,
+        output_fn=torch.sigmoid, output_fn_args=None, device="cpu",
+        # specific configs
+        dnn_hidden_units=(256, 128), dnn_use_bn=False, dnn_activation="relu",
+        dnn_dropout=0, l2_reg_linear=1e-4, l2_reg_embedding=1e-4, l2_reg_dnn=0,
+        init_std=0.0001,
     ):
         super(WideAndDeep, self).__init__(
             linear_feature_columns, dnn_feature_columns, seed=seed,

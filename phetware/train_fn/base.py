@@ -4,17 +4,18 @@ import torchmetrics
 import ray.train as train
 
 from phetware.inputs import reformat_input_features
+from phetware.util import get_package_name
 from phetware import Epochvisor
 
 
 class BaseTrainFn(object):
     def __call__(self, config):
-        self.linear_feature_columns = config.get("linear_feature_columns")
-        self.dnn_feature_columns = config.get("dnn_feature_columns")
-        self.torch_dataset_options = config.get("torch_dataset_options")
+        self.linear_feature_columns = config.get("linear_feature_columns", None)
+        self.dnn_feature_columns = config.get("dnn_feature_columns", None)
+        self.torch_dataset_options = config.get("torch_dataset_options", None)
         self.seed = config.get("seed", 1024)
-        self.epochs = config.get("epochs")
-        self.batch_size = config.get("batch_size")
+        self.epochs = config.get("epochs", 10)
+        self.batch_size = config.get("batch_size", 256)
         self.loss_fn = config.get("loss_fn", nn.BCELoss())
         self.optimizer = config.get("optimizer", torch.optim.Adam)
         self.metric_fns = config.get("metric_fns", [torchmetrics.AUROC()])
@@ -44,7 +45,12 @@ class BaseTrainFn(object):
     
     def setup_model(self, model):
         self.model = model
-        self.optimizer = self.optimizer(model.parameters())
+        if get_package_name(self.optimizer) == "torch":
+            self.optimizer = self.optimizer(model.parameters())
+        elif type(self.optimizer).__name__ == "OptimizerStack":
+            self.optimizer.compile(self.model.module)
+        else:
+            raise ValueError("optimizer must be given and valid")
         self.setup_epv()
         if self.log_nn_arch: print(model)
     
