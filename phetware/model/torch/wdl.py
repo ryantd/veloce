@@ -1,4 +1,5 @@
 import torch.nn as nn
+import torch
 
 from phetware.layer import DNN, OutputLayer
 from phetware.inputs import concat_dnn_inputs, compute_inputs_dim, embedding_dict_gen, collect_inputs_and_embeddings
@@ -11,7 +12,8 @@ class WideAndDeep(BaseModel):
         linear_feature_columns, dnn_feature_columns, dnn_hidden_units=(256, 128),
         l2_reg_linear=1e-4, l2_reg_embedding=1e-4, l2_reg_dnn=0,
         init_std=0.0001, seed=1024, dnn_dropout=0, dnn_activation='relu',
-        dnn_use_bn=False, task='binary', device='cpu'
+        dnn_use_bn=False, output_fn=torch.sigmoid, output_fn_args=None,
+        device='cpu'
     ):
         super(WideAndDeep, self).__init__(
             linear_feature_columns, dnn_feature_columns, seed=seed,
@@ -58,7 +60,8 @@ class WideAndDeep(BaseModel):
                 self.final_linear.weight, l2=l2_reg_dnn)
 
         # output layer setup
-        self.output = OutputLayer(task)
+        self.output = OutputLayer(
+            output_fn=output_fn, output_fn_args=output_fn_args)
         self.to(device)
 
     def forward(self, X):

@@ -77,8 +77,12 @@ def train_wdl_dist(num_workers=2, use_gpu=False):
             "epochs": 10,
             "batch_size": 256,
             "dnn_dropout": 0.2,
+            "seed": RAND_SEED,
             "loss_fn": nn.BCELoss(),
             "metric_fns": [torchmetrics.AUROC(), log_loss],
+            "output_fn": torch.softmax,
+            "output_fn_args": dict(
+                dim=0),
             "torch_dataset_options": dict(
                 label_column="label",
                 feature_columns=sparse_features + dense_features,

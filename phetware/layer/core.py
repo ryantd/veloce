@@ -53,13 +53,16 @@ class DNN(nn.Module):
 
 
 class OutputLayer(nn.Module):
-    def __init__(self, task="binary", use_bias=True):
-        if task not in ["binary", "multiclass", "regression"]:
-            raise ValueError("task must be binary, multiclass or regression")
-
+    def __init__(self, output_fn=None, output_fn_args=None, use_bias=True):
         super(OutputLayer, self).__init__()
+        if not output_fn:
+            raise ValueError("Arg output_fn must be givin")
+        if not output_fn_args:
+            output_fn_args = dict()
+
         self.use_bias = use_bias
-        self.task = task
+        self.output_fn = output_fn
+        self.output_fn_args = output_fn_args
         if self.use_bias:
             self.bias = nn.Parameter(torch.zeros((1,)))
 
@@ -67,6 +70,5 @@ class OutputLayer(nn.Module):
         output = X
         if self.use_bias:
             output += self.bias
-        if self.task == "binary":
-            output = torch.sigmoid(output)
+        output = self.output_fn(output, **self.output_fn_args)
         return output

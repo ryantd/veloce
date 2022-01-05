@@ -12,11 +12,14 @@ class BaseTrainFn(object):
         self.linear_feature_columns = config.get("linear_feature_columns")
         self.dnn_feature_columns = config.get("dnn_feature_columns")
         self.torch_dataset_options = config.get("torch_dataset_options")
+        self.seed = config.get("seed", 1024)
         self.epochs = config.get("epochs")
         self.batch_size = config.get("batch_size")
         self.loss_fn = config.get("loss_fn", nn.BCELoss())
         self.optimizer = config.get("optimizer", torch.optim.Adam)
         self.metric_fns = config.get("metric_fns", [torchmetrics.AUROC()])
+        self.output_fn = config.get("output_fn", torch.sigmoid)
+        self.output_fn_args = config.get("output_fn_args", None)
         self.log_nn_arch = config.get("log_nn_arch", False)
         self.checkpoint = train.load_checkpoint() or None
         self.device = train.torch.get_device()
@@ -52,8 +55,8 @@ class BaseTrainFn(object):
             test_dataset_iter=self.test_dataset_iterator,
             dataset_options=self.torch_dataset_options,
             batch_size=self.batch_size, model=self.model, loss_fn=self.loss_fn,
-            optimizer=self.optimizer, metric_fns=self.metric_fns, device=self.device,
-            checkpoint=self.checkpoint)
+            optimizer=self.optimizer, metric_fns=self.metric_fns,
+            device=self.device, checkpoint=self.checkpoint)
     
     def run_epochs(self):
         return self.epv.run_epochs()
