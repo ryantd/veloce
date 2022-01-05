@@ -72,6 +72,8 @@ def train_wdl_dist(num_workers=2, use_gpu=False):
         train_func=WideAndDeep(),
         dataset=datasets,
         callbacks=[JsonLoggerCallback(), TBXLoggerCallback()],
+        # use checkpoint to support fault tolerance
+        # checkpoint=dict(),
         config={
             "dnn_feature_columns": feature_columns["dnn"],
             "linear_feature_columns": feature_columns["linear"],
