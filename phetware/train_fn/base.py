@@ -14,9 +14,10 @@ class BaseTrainFn(object):
         self.torch_dataset_options = config.get("torch_dataset_options")
         self.epochs = config.get("epochs")
         self.batch_size = config.get("batch_size")
-        self.loss_fn = config.get("loss_fn", nn.BCELoss)
+        self.loss_fn = config.get("loss_fn", nn.BCELoss())
         self.optimizer = config.get("optimizer", torch.optim.Adam)
         self.metric_fns = config.get("metric_fns", [torchmetrics.AUROC()])
+        self.log_nn_arch = config.get("log_nn_arch", False)
         self.checkpoint = train.load_checkpoint() or None
         self.device = train.torch.get_device()
 
@@ -37,14 +38,12 @@ class BaseTrainFn(object):
             self.test_dataset_iterator = test_dataset_shard.iter_datasets()
         except:
             self.test_dataset_iterator = None
-
-        # loss_fn setup
-        self.loss_fn = self.loss_fn()
     
     def setup_model(self, model):
         self.model = model
         self.optimizer = self.optimizer(model.parameters())
         self.setup_epv()
+        if self.log_nn_arch: print(model)
     
     def setup_epv(self):
         self.epv = Epochvisor(

@@ -1,9 +1,11 @@
 import torch
+import torch.nn as nn
 import torchmetrics
 import ray
 from ray.train import Trainer
 from ray.train.callbacks import JsonLoggerCallback, TBXLoggerCallback
 from pyarrow.csv import ConvertOptions
+from sklearn.metrics import log_loss
 
 from phetware.train_fn import WideAndDeep
 from phetware.preprocessing import fillna, MinMaxScaler, LabelEncoder
@@ -75,7 +77,8 @@ def train_wdl_dist(num_workers=2, use_gpu=False):
             "epochs": 10,
             "batch_size": 256,
             "dnn_dropout": 0.2,
-            "metric_fns": [torchmetrics.AUROC()],
+            "loss_fn": nn.BCELoss(),
+            "metric_fns": [torchmetrics.AUROC(), log_loss],
             "torch_dataset_options": dict(
                 label_column="label",
                 feature_columns=sparse_features + dense_features,

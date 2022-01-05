@@ -1,6 +1,8 @@
 import torch
 import ray.train as train
 
+from .util import get_package_name
+
 
 class Epochvisor(object):
     def __init__(
@@ -123,11 +125,30 @@ class Epochvisor(object):
         return result
     
     def test_epoch(self, test_iterable_ds):
-        for _, (X, y) in enumerate(test_iterable_ds):
-            X = X.to(self.device)
-            y = y.to(self.device).int()
-            pred = self.model(X)
-            [fn(pred, y) for fn in self.metric_fns]
-        result = {type(fn).__name__: fn.compute().item() for fn in self.metric_fns}
-        [fn.reset() for fn in self.metric_fns]
-        return result
+        num_batches = 0
+        sklearn_intermediates = dict()
+        results = dict()
+        with torch.no_grad():
+            for _, (X, y) in enumerate(test_iterable_ds):
+                X = X.to(self.device)
+                y = y.to(self.device)
+                num_batches += 1
+                pred = self.model(X)
+                for fn in self.metric_fns:
+                    if get_package_name(fn) == "torchmetrics":
+                        fn(pred, y.int())
+                    elif get_package_name(fn) == "sklearn":
+                        if type(fn).__name__ not in sklearn_intermediates:
+                            sklearn_intermediates[fn.__name__] = 0
+                        sklearn_intermediates[fn.__name__] += fn(
+                            y.cpu().data.numpy(), pred.cpu().data.numpy())
+        # torchmetrics compute and reset
+        for fn in self.metric_fns:
+            if get_package_name(fn) == "torchmetrics":
+                results[type(fn).__name__] = fn.compute().item()
+                fn.reset()
+        # sklearn compute
+        for name in sklearn_intermediates.keys():
+            sklearn_intermediates[name] /= num_batches
+        results.update(sklearn_intermediates)
+        return results
