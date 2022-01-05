@@ -12,10 +12,10 @@ class Epochvisor(object):
         model,
         loss_fn,
         optimizer,
-        metric_fn,
         device,
         checkpoint,
         train_dataset_iter,
+        metric_fns=None,
         validation_dataset_iter=None,
         test_dataset_iter=None,
         printable_batch_interval=10,
@@ -30,11 +30,14 @@ class Epochvisor(object):
         self.model = model
         self.loss_fn = loss_fn
         self.optimizer = optimizer
-        self.metric_fn = metric_fn
+        self.metric_fns = metric_fns
         self.device = device
         self.checkpoint = checkpoint
         self.printable_batch_interval = printable_batch_interval
         self.verbose = verbose
+
+        if not self.metric_fns:
+            raise ValueError("metric_fns must be given")
 
     def run_epochs(self):
         label_column = self.dataset_options["label_column"]
@@ -124,8 +127,7 @@ class Epochvisor(object):
             X = X.to(self.device)
             y = y.to(self.device).int()
             pred = self.model(X)
-            auc = self.metric_fn(pred, y)
-        auc = self.metric_fn.compute().item()
-        result = {"auc": auc}
-        self.metric_fn.reset()
+            [fn(pred, y) for fn in self.metric_fns]
+        result = {type(fn).__name__: fn.compute().item() for fn in self.metric_fns}
+        [fn.reset() for fn in self.metric_fns]
         return result

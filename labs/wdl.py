@@ -1,4 +1,5 @@
 import torch
+import torchmetrics
 import ray
 from ray.train import Trainer
 from ray.train.callbacks import JsonLoggerCallback, TBXLoggerCallback
@@ -71,9 +72,10 @@ def train_wdl_dist(num_workers=2, use_gpu=False):
         config={
             "dnn_feature_columns": feature_columns["dnn"],
             "linear_feature_columns": feature_columns["linear"],
-            "epochs": 100,
+            "epochs": 10,
             "batch_size": 256,
             "dnn_dropout": 0.2,
+            "metric_fns": [torchmetrics.AUROC()],
             "torch_dataset_options": dict(
                 label_column="label",
                 feature_columns=sparse_features + dense_features,
@@ -81,7 +83,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False):
                 feature_column_dtypes=[torch.float] * (len(sparse_features) + len(dense_features)))
         })
     trainer.shutdown()
-    print(f"Results: {results[0]}")
+    print(f"Results: {results[0][-1]}")
 
 
 if __name__ == "__main__":
