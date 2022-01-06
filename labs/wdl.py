@@ -73,7 +73,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False):
         train_func=WideAndDeep(),
         dataset=datasets,
         callbacks=[JsonLoggerCallback(), TBXLoggerCallback()],
-        # use checkpoint to support fault tolerance
+        # support fault tolerance with checkpoints
         # checkpoint=dict(),
         config={
             "dnn_feature_columns": feature_columns["dnn"],
@@ -82,8 +82,10 @@ def train_wdl_dist(num_workers=2, use_gpu=False):
             "batch_size": 256,
             "dnn_dropout": 0.2,
             "seed": RAND_SEED,
+            # support multiple loss functions with fixed weight
             "loss_fn": LossFnStack(
-                dict(fn=nn.BCELoss(), weight=0.8), dict(fn=nn.MSELoss(), weight=0.2)),
+                dict(fn=nn.BCELoss(), weight=0.2),
+                dict(fn=nn.HingeEmbeddingLoss(), weight=0.8)),
             # support multiple optimizers
             "optimizer": OptimizerStack(
                 dict(cls=torch.optim.Adagrad, model_key="deep_model"),
@@ -99,7 +101,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False):
                 feature_column_dtypes=[torch.float] * (len(sparse_features) + len(dense_features)))
         })
     trainer.shutdown()
-    print(f"Results: {results[0][-1]}") # AUROC: 0.5934, log_loss: 0.9316
+    print(f"Results: {results[0][-1]}") # AUROC: 0.5934, log_loss: 0.9292
 
 
 if __name__ == "__main__":
