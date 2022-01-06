@@ -1,7 +1,7 @@
 import torch
 import ray.train as train
 
-from .util import get_package_name
+from .util import get_package_name, merge_results
 
 
 class Epochvisor(object):
@@ -76,7 +76,7 @@ class Epochvisor(object):
                     label_column_dtype=label_column_dtype,
                     feature_column_dtypes=feature_column_dtypes,
                     batch_size=self.batch_size)
-                self.validate_epoch(validation_torch_dataset)
+                validation_result = self.validate_epoch(validation_torch_dataset)
             
             if self.test_dataset_iter:
                 test_dataset = next(self.test_dataset_iter)
@@ -86,12 +86,14 @@ class Epochvisor(object):
                     label_column_dtype=label_column_dtype,
                     feature_column_dtypes=feature_column_dtypes,
                     batch_size=self.batch_size)
-                result = self.test_epoch(test_torch_dataset)
+                test_result = self.test_epoch(test_torch_dataset)
 
             train.save_checkpoint(
                 epoch=epoch_id,
                 model_state_dict=self.model.state_dict(),
                 optimizer_state_dict=self.optimizer.state_dict())
+            result = merge_results(
+                validation_result=validation_result, test_result=test_result)
             train.report(**result)
             results.append(result)
         return results
