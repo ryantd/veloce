@@ -38,19 +38,19 @@ class DenseFeat(namedtuple('DenseFeat', ['name', 'dimension', 'dtype', 'feat_typ
         return self.name.__hash__()
 
 
-def reformat_input_features(feature_columns):
-    new_feature_columns = list()
-    for feat in feature_columns:
+def reformat_input_features(feature_defs):
+    new_feature_defs = list()
+    for feat in feature_defs:
         feat_variant = globals()[feat["feat_type"]]
-        new_feature_columns.append(feat_variant(**feat))
-    return new_feature_columns
+        new_feature_defs.append(feat_variant(**feat))
+    return new_feature_defs
 
 
-def build_feature_named_index_mapping(feature_columns):
+def build_feature_named_index_mapping(feature_defs):
     features = OrderedDict()
 
     start = 0
-    for feat in feature_columns:
+    for feat in feature_defs:
         feat_name = feat.name
         if feat_name in features:
             continue
@@ -80,12 +80,12 @@ def concat_dnn_inputs(sparse_embedding_list, dense_value_list):
         raise NotImplementedError
 
 
-def embedding_dict_gen(sparse_feature_columns, init_std=0.0001, linear=False, sparse=False, device='cpu'):
+def embedding_dict_gen(sparse_feature_defs, init_std=0.0001, linear=False, sparse=False, device='cpu'):
     embedding_dict = nn.ModuleDict({
         feat.embedding_name: nn.Embedding(
             feat.vocabulary_size,
             feat.embedding_dim if not linear else 1,
-            sparse=sparse) for feat in sparse_feature_columns
+            sparse=sparse) for feat in sparse_feature_defs
     })
 
     for tensor in embedding_dict.values():
@@ -95,37 +95,37 @@ def embedding_dict_gen(sparse_feature_columns, init_std=0.0001, linear=False, sp
 
 
 def compute_inputs_dim(
-        sparse_feature_columns, dense_feature_columns,
-        include_sparse=True, include_dense=True, feature_group=False
-    ):
-        input_dim = 0
-        dense_input_dim = sum(
-            map(lambda x: x.dimension, dense_feature_columns))
-        if feature_group:
-            sparse_input_dim = len(sparse_feature_columns)
-        else:
-            sparse_input_dim = sum(feat.embedding_dim for feat in sparse_feature_columns)
-        
-        if include_sparse:
-            input_dim += sparse_input_dim
-        if include_dense:
-            input_dim += dense_input_dim
-        return input_dim
+    sparse_feature_defs, dense_feature_defs, include_sparse=True,
+    include_dense=True, feature_group=False
+):
+    input_dim = 0
+    dense_input_dim = sum(
+        map(lambda x: x.dimension, dense_feature_defs))
+    if feature_group:
+        sparse_input_dim = len(sparse_feature_defs)
+    else:
+        sparse_input_dim = sum(feat.embedding_dim for feat in sparse_feature_defs)
+    
+    if include_sparse:
+        input_dim += sparse_input_dim
+    if include_dense:
+        input_dim += dense_input_dim
+    return input_dim
 
 
 def collect_inputs_and_embeddings(
-        X, sparse_feature_columns, dense_feature_columns,
-        feature_name_to_index, embedding_layer_def=None
-    ):
-        # embeddings part
-        if not embedding_layer_def:
-            sparse_embeddings = []
-        else:
-            sparse_embeddings = [embedding_layer_def[feat.embedding_name](X[
-                :, feature_name_to_index[feat.name][0]: feature_name_to_index[feat.name][1]
-            ].long()) for feat in sparse_feature_columns]
-        # dense inputs part
-        dense_values = [X[
+    X, sparse_feature_defs, dense_feature_defs, feature_name_to_index,
+    embedding_layer_def=None
+):
+    # embeddings part
+    if not embedding_layer_def:
+        sparse_embeddings = []
+    else:
+        sparse_embeddings = [embedding_layer_def[feat.embedding_name](X[
             :, feature_name_to_index[feat.name][0]: feature_name_to_index[feat.name][1]
-        ] for feat in dense_feature_columns]
-        return dense_values, sparse_embeddings
+        ].long()) for feat in sparse_feature_defs]
+    # dense inputs part
+    dense_values = [X[
+        :, feature_name_to_index[feat.name][0]: feature_name_to_index[feat.name][1]
+    ] for feat in dense_feature_defs]
+    return dense_values, sparse_embeddings

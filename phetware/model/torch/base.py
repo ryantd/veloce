@@ -2,12 +2,12 @@ import torch
 import torch.nn as nn
 
 from phetware.inputs import embedding_dict_gen, build_feature_named_index_mapping, collect_inputs_and_embeddings
-from phetware.feature_column import FeatureColumnSet
+from phetware.feature_column import FeatureDefSet
 
 
 class BaseModel(nn.Module):
     def __init__(
-        self, linear_feature_columns, dnn_feature_columns, seed=1024,
+        self, linear_feature_defs, dnn_feature_defs, seed=1024,
         device='cpu'
     ):
         super(BaseModel, self).__init__()
@@ -15,15 +15,15 @@ class BaseModel(nn.Module):
         self.device = device
         self.regularization_weight = []
 
-        # produce dense and sparse fcs on dnn and linear inputs respectively
-        self.fcs = FeatureColumnSet(
-            linear_feature_columns=linear_feature_columns,
-            dnn_feature_columns=dnn_feature_columns)
-        self.fcs.sorter()
+        # produce dense and sparse fds on dnn and linear inputs respectively
+        self.fds = FeatureDefSet(
+            linear_feature_defs=linear_feature_defs,
+            dnn_feature_defs=dnn_feature_defs)
+        self.fds.sorter()
 
         # produce mapping from feature names to columns index
         self.feature_name_to_index = build_feature_named_index_mapping(
-            self.fcs.all_fcs)
+            self.fds.all_defs)
 
         self.to(device)
 
@@ -38,31 +38,31 @@ class BaseModel(nn.Module):
 
 class Linear(nn.Module):
     def __init__(
-        self, sparse_feature_columns, dense_feature_columns,
+        self, sparse_feature_defs, dense_feature_defs,
         feature_named_index_mapping, init_std=0.0001, device='cpu'
     ):
         super(Linear, self).__init__()
         self.feature_name_to_index = feature_named_index_mapping
         self.device = device
-        self.sparse_feature_columns = sparse_feature_columns
-        self.dense_feature_columns = dense_feature_columns
+        self.sparse_feature_defs = sparse_feature_defs
+        self.dense_feature_defs = dense_feature_defs
 
         self.linear_embedding_dict = embedding_dict_gen(
-            self.sparse_feature_columns,
+            self.sparse_feature_defs,
             init_std, linear=True, sparse=False,
             device=device)
 
-        if len(self.dense_feature_columns):
+        if len(self.dense_feature_defs):
             self.weight = nn.Parameter(
                 torch.Tensor(
-                    sum(fc.dimension for fc in self.dense_feature_columns),
+                    sum(fc.dimension for fc in self.dense_feature_defs),
                     1).to(device))
             torch.nn.init.normal_(self.weight, mean=0, std=init_std)
 
     def forward(self, X, sparse_feat_refine_weight=None):
         dense_values, sparse_embeddings = collect_inputs_and_embeddings(
-            X, sparse_feature_columns=self.sparse_feature_columns,
-            dense_feature_columns=self.dense_feature_columns,
+            X, sparse_feature_defs=self.sparse_feature_defs,
+            dense_feature_defs=self.dense_feature_defs,
             feature_name_to_index=self.feature_name_to_index,
             embedding_layer_def=self.linear_embedding_dict)
 

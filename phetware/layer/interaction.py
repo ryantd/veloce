@@ -3,16 +3,6 @@ import torch.nn as nn
 
 
 class FM(nn.Module):
-    """Factorization Machine models pairwise (order-2) feature interactions
-     without linear term and bias.
-      Input shape
-        - 3D tensor with shape: ``(batch_size,field_size,embedding_size)``.
-      Output shape
-        - 2D tensor with shape: ``(batch_size, 1)``.
-      References
-        - [Factorization Machines](https://www.csie.ntu.edu.tw/~b97053/paper/Rendle2010FM.pdf)
-    """
-
     def __init__(self):
         super(FM, self).__init__()
 

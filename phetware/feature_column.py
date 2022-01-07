@@ -5,7 +5,7 @@ import pandas as pd
 from phetware.inputs import SparseFeat, DenseFeat
 
 
-class SparseFeatureColumn(object):
+class SparseFeatureDef(object):
     def __init__(
         self,
         col_selectors: List,
@@ -34,7 +34,7 @@ class SparseFeatureColumn(object):
         return sparse_df
 
 
-class DenseFeatureColumn(object):
+class DenseFeatureDef(object):
     def __init__(self, col_selectors: List, dimension=1):
         self.col_selectors = col_selectors
         self.dimension = dimension
@@ -53,18 +53,18 @@ class DenseFeatureColumn(object):
         return dense_df
 
 
-class FeatureColumnSet(object):
-    def __init__(self, dnn_feature_columns, linear_feature_columns):
-        self.dnn_fcs = dnn_feature_columns
-        self.linear_fcs = linear_feature_columns
-        self.all_fcs = dnn_feature_columns + linear_feature_columns
+class FeatureDefSet(object):
+    def __init__(self, dnn_feature_defs, linear_feature_defs):
+        self.dnn_defs = dnn_feature_defs
+        self.linear_defs = linear_feature_defs
+        self.all_defs = dnn_feature_defs + linear_feature_defs
     
     def sorter(self):
-        self.dnn_sparse_fcs, self.dnn_dence_fcs = [], []
-        self.linear_sparse_fcs, self.linear_dence_fcs = [], []
-        for x in self.dnn_fcs:
-            if isinstance(x, SparseFeat): self.dnn_sparse_fcs.append(x)
-            elif isinstance(x, DenseFeat): self.dnn_dence_fcs.append(x)
-        for x in self.linear_fcs:
-            if isinstance(x, SparseFeat): self.linear_sparse_fcs.append(x)
-            elif isinstance(x, DenseFeat): self.linear_dence_fcs.append(x)
+        self.dnn_sparse_defs, self.dnn_dence_defs = [], []
+        self.linear_sparse_defs, self.linear_dence_defs = [], []
+        for x in self.dnn_defs:
+            if isinstance(x, SparseFeat): self.dnn_sparse_defs.append(x)
+            elif isinstance(x, DenseFeat): self.dnn_dence_defs.append(x)
+        for x in self.linear_defs:
+            if isinstance(x, SparseFeat): self.linear_sparse_defs.append(x)
+            elif isinstance(x, DenseFeat): self.linear_dence_defs.append(x)

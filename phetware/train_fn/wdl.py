@@ -17,7 +17,7 @@ class WideAndDeep(BaseTrainFn):
         self.init_std = config.get("init_std", 0.0001)
 
         model = train.torch.prepare_model(_WideAndDeep(
-            self.linear_feature_columns, self.dnn_feature_columns,
+            self.linear_feature_defs, self.dnn_feature_defs,
             seed=self.seed, output_fn=self.output_fn,
             output_fn_args=self.output_fn_args, device=self.device,
             dnn_hidden_units=self.dnn_hidden_units, dnn_use_bn=self.dnn_use_bn,

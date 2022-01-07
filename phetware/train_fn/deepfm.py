@@ -8,8 +8,8 @@ class DeepFM(BaseTrainFn):
     def __call__(self, config):
         super(DeepFM, self).__call__(config)
         model = train.torch.prepare_model(_DeepFM(
-            self.linear_feature_columns,
-            self.dnn_feature_columns,
+            self.linear_feature_defs,
+            self.dnn_feature_defs,
             task='binary', device=self.device))
         self.setup_model(model=model)
         return self.run_epochs()
