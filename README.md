@@ -26,7 +26,7 @@
   <summary>Table of Contents</summary>
   <ol>
     <li>
-      <a href="#about-phetware">About Phetware</a>
+      <a href="#about-phetware">About phetware</a>
     </li>
     <li>
       <a href="#getting-started">Getting Started</a>
@@ -45,7 +45,7 @@
 </details>
 
 <!-- ABOUT THE PROJECT -->
-## About Phetware
+## About `phetware`
 __phetware__ is an `instant distributed computing` toolbox based on Ray Stack and ML/DL frameworks, which is flexible, efficient, and ease-of-use. It accelerates the development of any ML/DL training workload, on any cloud or local, at any number of workloads.
 
 - One-line change to __instantly run__ workloads on any cloud provider or local laptop
