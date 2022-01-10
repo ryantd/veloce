@@ -84,10 +84,14 @@ python -m labs.wdl
 ### CTR domain
 
 - [x] Wide and Deep
-
 - [x] DeepFM
-
+- [ ] FNN
+- [ ] PNN
 - [ ] DIN
+- [ ] DIEN
+<!-- - [ ] AFM
+- [ ] NFM
+- [ ] PLM -->
 
 
 <!-- CONTRIBUTING -->
