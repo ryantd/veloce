@@ -12,7 +12,7 @@ from .mapping import BUILTIN_DATASET_FEATS_MAPPING
 
 def load_dataset_builtin(
     dataset_name="criteo_mini",
-    feature_column_settings=None,
+    feature_def_settings=None,
     valid_split_factor=0.8,
     test_split_factor=0.9,
     rand_seed=2021
@@ -20,35 +20,31 @@ def load_dataset_builtin(
     if dataset_name not in BUILTIN_DATASET_FEATS_MAPPING:
         raise ValueError("Dataset name is invalid")
 
-    if not feature_column_settings:
-        feature_column_settings = dict(
-            dnn_dense=True, dnn_sparse=True,
-            linear_dense=True, linear_sparse=False)
+    if not feature_def_settings:
+        raise ValueError("feature_column_settings should be givin")
 
     # predefined feature names
-    dense_features = BUILTIN_DATASET_FEATS_MAPPING[dataset_name]["dense"]
-    sparse_features = BUILTIN_DATASET_FEATS_MAPPING[dataset_name]["sparse"]
-    label_column = BUILTIN_DATASET_FEATS_MAPPING[dataset_name]["label"]
+    dense_feat_names = BUILTIN_DATASET_FEATS_MAPPING[dataset_name]["dense"]
+    sparse_feat_names = BUILTIN_DATASET_FEATS_MAPPING[dataset_name]["sparse"]
+    label_name = BUILTIN_DATASET_FEATS_MAPPING[dataset_name]["label"]
     path = BUILTIN_DATASET_FEATS_MAPPING[dataset_name]["path"]
 
     # preprocess dataset
     ds = ray.data \
         .read_csv(
             path, convert_options=ConvertOptions(strings_can_be_null=True)) \
-        .map_batches(fillna(sparse_features, "-1"), batch_format="pandas") \
-        .map_batches(fillna(dense_features, 0), batch_format="pandas") \
-        .map_batches(LabelEncoder(sparse_features), batch_format="pandas") \
-        .map_batches(MinMaxScaler(dense_features), batch_format="pandas")
+        .map_batches(fillna(sparse_feat_names, "-1"), batch_format="pandas") \
+        .map_batches(fillna(dense_feat_names, 0), batch_format="pandas") \
+        .map_batches(LabelEncoder(sparse_feat_names), batch_format="pandas") \
+        .map_batches(MinMaxScaler(dense_feat_names), batch_format="pandas")
 
-    # process feature columns
+    # process feature defs
     sparse_defs = ds.map_batches(
-        SparseFeatureDef(sparse_features), batch_format="pandas")
+        SparseFeatureDef(sparse_feat_names), batch_format="pandas")
     dense_defs = ds.map_batches(
-        DenseFeatureDef(dense_features), batch_format="pandas")
-    dnn_feature_defs, linear_feature_defs = select_feature_defs(
-        feature_column_settings,
-        dense_defs=dense_defs.to_pandas().to_dict('records'),
-        sparse_defs=sparse_defs.to_pandas().to_dict('records'))
+        DenseFeatureDef(dense_feat_names), batch_format="pandas")
+    dense_defs = dense_defs.to_pandas().to_dict('records')
+    sparse_defs = sparse_defs.to_pandas().to_dict('records')
 
     # split dataset
     valid_idx = int(ds.count() * valid_split_factor)
@@ -67,20 +63,12 @@ def load_dataset_builtin(
         "test": test_dataset_pipeline
     }
     feature_defs = {
-        "dnn": dnn_feature_defs,
-        "linear": linear_feature_defs
-    }
+        k: dense_defs * int(v["dense"]) + sparse_defs * int(v["sparse"])
+        for k, v in feature_def_settings.items()}
     torch_dataset_options = {
-        "label_column": label_column,
-        "feature_columns": dense_features + sparse_features,
+        "label_column": label_name,
+        "feature_columns": dense_feat_names + sparse_feat_names,
         "label_column_dtype": torch.float,
-        "feature_column_dtypes": [torch.float] * len(dense_features + sparse_features)
+        "feature_column_dtypes": [torch.float] * len(dense_feat_names + sparse_feat_names)
     }
     return datasets, feature_defs, torch_dataset_options
-
-
-def select_feature_defs(bool_settings, dense_defs, sparse_defs):
-    settings = {k: int(v) for k, v in bool_settings.items()}
-    def combine(t):
-        return dense_defs * settings[f"{t}_dense"] + sparse_defs * settings[f"{t}_sparse"]
-    return combine("dnn"), combine("linear")

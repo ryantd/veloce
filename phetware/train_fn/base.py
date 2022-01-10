@@ -3,15 +3,12 @@ import torch.nn as nn
 import torchmetrics
 import ray.train as train
 
-from phetware.inputs import reformat_input_features
 from phetware.util import get_package_name
 from phetware import Epochvisor
 
 
 class BaseTrainFn(object):
     def __call__(self, config):
-        self.linear_feature_defs = config.get("linear_feature_defs", None)
-        self.dnn_feature_defs = config.get("dnn_feature_defs", None)
         self.torch_dataset_options = config.get("torch_dataset_options", None)
         self.seed = config.get("seed", 1024)
         self.epochs = config.get("epochs", 10)
@@ -22,12 +19,9 @@ class BaseTrainFn(object):
         self.output_fn = config.get("output_fn", torch.sigmoid)
         self.output_fn_args = config.get("output_fn_args", None)
         self.log_nn_arch = config.get("log_nn_arch", False)
+        self.init_std = config.get("init_std", 0.0001)
         self.checkpoint = train.load_checkpoint() or None
         self.device = train.torch.get_device()
-
-        # params setup
-        self.linear_feature_defs = reformat_input_features(self.linear_feature_defs)
-        self.dnn_feature_defs = reformat_input_features(self.dnn_feature_defs)
 
         # dataset setup
         train_dataset_shard = train.get_dataset_shard("train")

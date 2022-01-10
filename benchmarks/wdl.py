@@ -13,7 +13,11 @@ from benchmarks.dataset import load_dataset_builtin
 
 
 def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
-    datasets, feature_defs, torch_dataset_options = load_dataset_builtin("criteo_mini")
+    datasets, feature_defs, torch_dataset_options = load_dataset_builtin(
+        dataset_name="criteo_mini",
+        feature_def_settings={
+            "dnn": {"dense": True, "sparse":True},
+            "linear": {"dense": True, "sparse": False}})
 
     trainer = Trainer("torch", num_workers=num_workers, use_gpu=use_gpu)
     trainer.start()

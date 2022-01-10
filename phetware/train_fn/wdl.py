@@ -1,5 +1,6 @@
 import ray.train as train
 
+from phetware.inputs import reformat_input_features
 from phetware.model.torch import WideAndDeep as _WideAndDeep
 from .base import BaseTrainFn
 
@@ -7,6 +8,11 @@ from .base import BaseTrainFn
 class WideAndDeep(BaseTrainFn):
     def __call__(self, config):
         super(WideAndDeep, self).__call__(config)
+        self.linear_feature_defs = reformat_input_features(
+            config.get("linear_feature_defs", None))
+        self.dnn_feature_defs = reformat_input_features(
+            config.get("dnn_feature_defs", None))
+
         self.dnn_hidden_units = config.get("dnn_hidden_units", (256, 128))
         self.dnn_use_bn = config.get("dnn_use_bn", False)
         self.dnn_activation = config.get("dnn_activation", "relu")
@@ -14,7 +20,6 @@ class WideAndDeep(BaseTrainFn):
         self.l2_reg_linear = config.get("l2_reg_linear", 1e-4)
         self.l2_reg_embedding = config.get("l2_reg_embedding", 1e-4)
         self.l2_reg_dnn = config.get("l2_reg_dnn", 0)
-        self.init_std = config.get("init_std", 0.0001)
 
         model = train.torch.prepare_model(_WideAndDeep(
             self.linear_feature_defs, self.dnn_feature_defs,
