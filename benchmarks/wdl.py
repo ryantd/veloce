@@ -9,6 +9,7 @@ from sklearn.metrics import log_loss
 from phetware.train_fn import WideAndDeep
 from phetware.optimizer import OptimizerStack, FTRL
 from phetware.loss_fn import LossFnStack
+from phetware.util import pprint_results
 from benchmarks.dataset import load_dataset_builtin
 
 
@@ -53,7 +54,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "torch_dataset_options": torch_dataset_options
         })
     trainer.shutdown()
-    print(f"Results: {results[0][-1]}") # AUROC: 0.5934, log_loss: 0.9292
+    pprint_results(results)
 
 
 if __name__ == "__main__":
