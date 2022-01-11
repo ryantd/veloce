@@ -21,7 +21,7 @@ def load_dataset_builtin(
         raise ValueError("Dataset name is invalid")
 
     if not feature_def_settings:
-        raise ValueError("feature_column_settings should be givin")
+        raise ValueError("Arg feature_column_settings should be given")
 
     # predefined feature names
     dense_feat_names = BUILTIN_DATASET_FEATS_MAPPING[dataset_name]["dense"]

@@ -18,7 +18,7 @@ class BaseTrainFn(object):
         self.metric_fns = config.get("metric_fns", [torchmetrics.AUROC()])
         self.output_fn = config.get("output_fn", torch.sigmoid)
         self.output_fn_args = config.get("output_fn_args", None)
-        self.log_nn_arch = config.get("log_nn_arch", False)
+        self.summary_nn_arch = config.get("summary_nn_arch", False)
         self.init_std = config.get("init_std", 0.0001)
         self.checkpoint = train.load_checkpoint() or None
         self.device = train.torch.get_device()
@@ -46,7 +46,7 @@ class BaseTrainFn(object):
         else:
             raise ValueError("optimizer must be given and valid")
         self.setup_epv()
-        if self.log_nn_arch: print(model)
+        if self.summary_nn_arch: print(model)
     
     def setup_epv(self):
         self.epv = Epochvisor(

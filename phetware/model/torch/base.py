@@ -6,26 +6,23 @@ from phetware.feature_column import FeatureDefSet
 
 
 class BaseModel(nn.Module):
-    def __init__(
-        self, linear_feature_defs, dnn_feature_defs, seed=1024,
-        device='cpu'
-    ):
+    def __init__(self, **kwargs):
         super(BaseModel, self).__init__()
-        torch.manual_seed(seed)
-        self.device = device
+        torch.manual_seed(kwargs["seed"])
+        self.device = kwargs["device"]
         self.regularization_weight = []
+        del kwargs["seed"]
+        del kwargs["device"]
 
         # produce dense and sparse fds on dnn and linear inputs respectively
-        self.fds = FeatureDefSet(
-            linear_feature_defs=linear_feature_defs,
-            dnn_feature_defs=dnn_feature_defs)
+        self.fds = FeatureDefSet(kwargs)
         self.fds.sorter()
 
         # produce mapping from feature names to columns index
         self.feature_name_to_index = build_feature_named_index_mapping(
             self.fds.all_defs)
 
-        self.to(device)
+        self.to(self.device)
 
     def add_regularization_weight(self, weight_list, l1=0.0, l2=0.0):
         if isinstance(weight_list, torch.nn.parameter.Parameter):

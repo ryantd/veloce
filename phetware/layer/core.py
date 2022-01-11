@@ -56,7 +56,7 @@ class OutputLayer(nn.Module):
     def __init__(self, output_fn=None, output_fn_args=None, use_bias=True):
         super(OutputLayer, self).__init__()
         if not output_fn:
-            raise ValueError("Arg output_fn must be givin")
+            raise ValueError("Arg output_fn must be given")
         if not output_fn_args:
             output_fn_args = dict()
 

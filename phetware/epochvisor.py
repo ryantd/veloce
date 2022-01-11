@@ -20,8 +20,6 @@ class Epochvisor(object):
         metric_fns=None,
         validation_dataset_iter=None,
         test_dataset_iter=None,
-        printable_batch_interval=10,
-        verbose=0,
     ):
         self.epochs = epochs
         self.train_dataset_iter = train_dataset_iter
@@ -35,8 +33,6 @@ class Epochvisor(object):
         self.metric_fns = metric_fns
         self.device = device
         self.checkpoint = checkpoint
-        self.printable_batch_interval = printable_batch_interval
-        self.verbose = verbose
 
         if not self.metric_fns:
             raise ValueError("metric_fns must be given")

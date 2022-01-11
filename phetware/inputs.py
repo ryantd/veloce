@@ -11,7 +11,7 @@ DEFAULT_GROUP_NAME = "default_group"
 class SparseFeat(namedtuple('SparseFeat',
                             ['name', 'vocabulary_size', 'embedding_dim', 'use_hash', 'dtype', 'embedding_name',
                              'group_name', 'feat_type'])):
-    __slots__ = ()
+    key = "sparse"
 
     def __new__(cls, name, vocabulary_size, embedding_dim=4, use_hash=False, dtype="int32", embedding_name=None,
                 group_name=DEFAULT_GROUP_NAME, feat_type="SparseFeat"):
@@ -29,7 +29,7 @@ class SparseFeat(namedtuple('SparseFeat',
         return self.name.__hash__()
 
 class DenseFeat(namedtuple('DenseFeat', ['name', 'dimension', 'dtype', 'feat_type'])):
-    __slots__ = ()
+    key = "dense"
 
     def __new__(cls, name, dimension=1, dtype="float32", feat_type="DenseFeat"):
         return super(DenseFeat, cls).__new__(cls, name, int(dimension), dtype, feat_type)
@@ -114,9 +114,11 @@ def compute_inputs_dim(
 
 
 def collect_inputs_and_embeddings(
-    X, sparse_feature_defs, dense_feature_defs, feature_name_to_index,
-    embedding_layer_def=None
+    X, sparse_feature_defs, dense_feature_defs=None, feature_name_to_index=None,
+    embedding_layer_def=None, return_dense=True
 ):
+    if not feature_name_to_index:
+        raise ValueError("Arg feature_name_to_index should be given")
     # embeddings part
     if not embedding_layer_def:
         sparse_embeddings = []
@@ -124,8 +126,10 @@ def collect_inputs_and_embeddings(
         sparse_embeddings = [embedding_layer_def[feat.embedding_name](X[
             :, feature_name_to_index[feat.name][0]: feature_name_to_index[feat.name][1]
         ].long()) for feat in sparse_feature_defs]
-    # dense inputs part
-    dense_values = [X[
-        :, feature_name_to_index[feat.name][0]: feature_name_to_index[feat.name][1]
-    ] for feat in dense_feature_defs]
-    return dense_values, sparse_embeddings
+    if return_dense:
+        # dense inputs part
+        dense_values = [X[
+            :, feature_name_to_index[feat.name][0]: feature_name_to_index[feat.name][1]
+        ] for feat in dense_feature_defs]
+        return dense_values, sparse_embeddings
+    return sparse_embeddings

@@ -9,22 +9,26 @@ from .base import BaseModel, Linear
 class WideAndDeep(BaseModel):
     def __init__(
         self,
-        # base configs
-        linear_feature_defs, dnn_feature_defs, seed=1024,
-        output_fn=torch.sigmoid, output_fn_args=None, device="cpu",
-        # specific configs
+        # feature defs
+        linear_feature_defs, dnn_feature_defs,
+        # linear related
+        l2_reg_linear=1e-4,
+        # dnn related
         dnn_hidden_units=(256, 128), dnn_use_bn=False, dnn_activation="relu",
-        dnn_dropout=0, l2_reg_linear=1e-4, l2_reg_embedding=1e-4, l2_reg_dnn=0,
+        dnn_dropout=0, l2_reg_embedding=1e-4, l2_reg_dnn=0,
+        # base configs
+        seed=1024, output_fn=torch.sigmoid, output_fn_args=None, device="cpu",
         init_std=0.0001,
     ):
         super(WideAndDeep, self).__init__(
-            linear_feature_defs, dnn_feature_defs, seed=seed,
-            device=device)
+            linear_feature_defs=linear_feature_defs,
+            dnn_feature_defs=dnn_feature_defs,
+            seed=seed, device=device)
         self.use_dnn = len(dnn_feature_defs) > 0 and len(dnn_hidden_units) > 0
 
         # embedding layer setup
         self.dnn_embedding_layer = embedding_dict_gen(
-            self.fds.dnn_sparse_defs,
+            self.fds.dnn_defs_sparse,
             init_std=init_std, sparse=False,
             device=device)
         self.add_regularization_weight(
@@ -32,8 +36,8 @@ class WideAndDeep(BaseModel):
 
         # wide model setup
         self.wide_model = Linear(
-            sparse_feature_defs=self.fds.linear_sparse_defs,
-            dense_feature_defs=self.fds.linear_dence_defs,
+            sparse_feature_defs=self.fds.linear_defs_sparse,
+            dense_feature_defs=self.fds.linear_defs_dense,
             feature_named_index_mapping=self.feature_name_to_index,
             device=device)
         self.add_regularization_weight(
@@ -43,8 +47,8 @@ class WideAndDeep(BaseModel):
         if self.use_dnn:
             self.deep_model = DNN(
                 compute_inputs_dim(
-                    sparse_feature_defs=self.fds.dnn_sparse_defs,
-                    dense_feature_defs=self.fds.dnn_dence_defs),
+                    sparse_feature_defs=self.fds.dnn_defs_sparse,
+                    dense_feature_defs=self.fds.dnn_defs_dense),
                 dnn_hidden_units,
                 activation=dnn_activation,
                 l2_reg=l2_reg_dnn,
@@ -67,14 +71,13 @@ class WideAndDeep(BaseModel):
         self.to(device)
 
     def forward(self, X):
-        dense_values, sparse_embeddings = collect_inputs_and_embeddings(
-            X, sparse_feature_defs=self.fds.dnn_sparse_defs,
-            dense_feature_defs=self.fds.dnn_dence_defs,
-            feature_name_to_index=self.feature_name_to_index,
-            embedding_layer_def=self.dnn_embedding_layer)
         logit = self.wide_model(X)
-
         if self.use_dnn:
+            dense_values, sparse_embeddings = collect_inputs_and_embeddings(
+                X, sparse_feature_defs=self.fds.dnn_defs_sparse,
+                dense_feature_defs=self.fds.dnn_defs_dense,
+                feature_name_to_index=self.feature_name_to_index,
+                embedding_layer_def=self.dnn_embedding_layer)
             dnn_input = concat_dnn_inputs(sparse_embeddings, dense_values)
             dnn_output = self.deep_model(dnn_input)
             dnn_logit = self.final_linear(dnn_output)
