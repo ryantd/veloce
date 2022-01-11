@@ -38,7 +38,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "output_fn_args": dict(dim=0),
             "dnn_dropout": 0.2,
             # API: defined in train lifecycle
-            "epochs": 10,
+            "epochs": 100,
             "batch_size": 256,
             "loss_fn": LossFnStack(
                 # support multiple loss functions with fixed weight
@@ -54,7 +54,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "torch_dataset_options": torch_dataset_options
         })
     trainer.shutdown()
-    pprint_results(results)
+    pprint_results(results, print_interval=10)
 
 
 if __name__ == "__main__":

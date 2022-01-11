@@ -20,7 +20,7 @@ def merge_results(validation_result, test_result):
     return result
 
 
-def pprint_results(all_results, use_style=True):
+def pprint_results(all_results, use_style=True, print_interval=1):
     class StyleCoder(object):
         def __init__(self, use_style):
             self.use_style = use_style
@@ -28,13 +28,13 @@ def pprint_results(all_results, use_style=True):
             return f"\033[{code}m" if self.use_style else ""
     s = StyleCoder(use_style)
     for worker_idx, results in enumerate(all_results):
-        acc_metrics = {}
+        acc_metrics = {k: v for k, v in results[0].items()}
         total = len(results)
         print(f"\n{s('1')}=========================\nWorker {worker_idx} training results\n========================={s('0')}")
-        for idx, val in enumerate(results):
+        for idx in range(print_interval-1, total, print_interval):
+            val = results[idx]
             metrics_join = []
             for k, v in val.items():
-                if idx == 0: acc_metrics[k] = v
                 if idx == total - 1: acc_metrics[k] -= v
                 metrics_join.append(f"{k}: {'%.5f' % v}")
             metrics_join = "\t".join(metrics_join)
