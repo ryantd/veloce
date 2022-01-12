@@ -21,7 +21,7 @@ def get_module_name(func):
 def merge_results(validation_result, test_result, time_diff=None):
     result = dict()
     for k, v in validation_result.items():
-        result[f"validation/{k}"] = v
+        result[f"valid/{k}"] = v
     for k, v in test_result.items():
         result[f"test/{k}"] = v
     if time_diff is not None:
