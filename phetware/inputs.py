@@ -3,8 +3,6 @@ from collections import OrderedDict, namedtuple
 import torch
 import torch.nn as nn
 
-from phetware.layer.utils import concat_func
-
 DEFAULT_GROUP_NAME = "default_group"
 
 
@@ -71,7 +69,7 @@ def concat_dnn_inputs(sparse_embedding_list, dense_value_list):
             torch.cat(sparse_embedding_list, dim=-1), start_dim=1)
         dense_dnn_input = torch.flatten(
             torch.cat(dense_value_list, dim=-1), start_dim=1)
-        return concat_func([sparse_dnn_input, dense_dnn_input])
+        return concat_inputs([sparse_dnn_input, dense_dnn_input])
     elif len(sparse_embedding_list) > 0:
         return torch.flatten(torch.cat(sparse_embedding_list, dim=-1), start_dim=1)
     elif len(dense_value_list) > 0:
@@ -95,20 +93,17 @@ def embedding_dict_gen(sparse_feature_defs, init_std=0.0001, linear=False, spars
 
 
 def compute_inputs_dim(
-    sparse_feature_defs, dense_feature_defs, include_sparse=True,
-    include_dense=True, feature_group=False
+    sparse_feature_defs=None, dense_feature_defs=None, feature_group=False
 ):
     input_dim = 0
-    dense_input_dim = sum(
-        map(lambda x: x.dimension, dense_feature_defs))
-    if feature_group:
-        sparse_input_dim = len(sparse_feature_defs)
-    else:
-        sparse_input_dim = sum(feat.embedding_dim for feat in sparse_feature_defs)
-    
-    if include_sparse:
+    if sparse_feature_defs is not None:
+        if feature_group:
+            sparse_input_dim = len(sparse_feature_defs)
+        else:
+            sparse_input_dim = sum(feat.embedding_dim for feat in sparse_feature_defs)
         input_dim += sparse_input_dim
-    if include_dense:
+    if dense_feature_defs is not None:
+        dense_input_dim = sum(map(lambda x: x.dimension, dense_feature_defs))
         input_dim += dense_input_dim
     return input_dim
 
@@ -133,3 +128,10 @@ def collect_inputs_and_embeddings(
         ] for feat in dense_feature_defs]
         return dense_values, sparse_embeddings
     return sparse_embeddings
+
+
+def concat_inputs(inputs, axis=-1):
+    if len(inputs) == 1:
+        return inputs[0]
+    else:
+        return torch.cat(inputs, dim=axis)

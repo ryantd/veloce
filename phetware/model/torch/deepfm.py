@@ -12,10 +12,10 @@ class DeepFM(BaseModel):
         # feature_defs
         fm_1_feature_defs, fm_2_feature_defs, dnn_feature_defs,
         # fm related
-        use_fm=True, l2_reg_fm_1=1e-4, l2_reg_fm_2=1e-4,
+        use_fm=True, l2_reg_fm_1=1e-5, l2_reg_fm_2=1e-5,
         # dnn related
         dnn_hidden_units=(256, 128), dnn_use_bn=False, dnn_activation="relu",
-        l2_reg_embedding=1e-4, l2_reg_dnn=0, dnn_dropout=0,
+        l2_reg_embedding=1e-5, l2_reg_dnn=0, dnn_dropout=0,
         # base config
         seed=1024, output_fn=torch.sigmoid, output_fn_args=None, device="cpu",
         init_std=0.0001,

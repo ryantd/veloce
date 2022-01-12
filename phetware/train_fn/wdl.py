@@ -17,8 +17,8 @@ class WideAndDeep(BaseTrainFn):
         self.dnn_use_bn = config.get("dnn_use_bn", False)
         self.dnn_activation = config.get("dnn_activation", "relu")
         self.dnn_dropout = config.get("dnn_dropout", 0.2)
-        self.l2_reg_linear = config.get("l2_reg_linear", 1e-4)
-        self.l2_reg_embedding = config.get("l2_reg_embedding", 1e-4)
+        self.l2_reg_linear = config.get("l2_reg_linear", 1e-5)
+        self.l2_reg_embedding = config.get("l2_reg_embedding", 1e-5)
         self.l2_reg_dnn = config.get("l2_reg_dnn", 0)
 
         model = train.torch.prepare_model(_WideAndDeep(
