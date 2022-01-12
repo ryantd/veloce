@@ -38,8 +38,8 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "output_fn_args": dict(dim=0),
             "dnn_dropout": 0.2,
             # API: defined in train lifecycle
-            "epochs": 100,
-            "batch_size": 256,
+            "epochs": 50,
+            "batch_size": 32,
             "loss_fn": LossFnStack(
                 # support multiple loss functions with fixed weight
                 dict(fn=nn.BCELoss(), weight=0.2),
@@ -50,7 +50,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
                 dict(cls=FTRL, args=dict(alpha=1.0, beta=1.0, l1=1.0, l2=1.0), model_key="wide_model")),
             "metric_fns": [
                 # support torchmetrics and sklearn metric funcs
-                torchmetrics.AUROC(), log_loss],
+                torchmetrics.AUROC(), log_loss, torchmetrics.MeanSquaredError(squared=False)],
             "torch_dataset_options": torch_dataset_options
         })
     trainer.shutdown()

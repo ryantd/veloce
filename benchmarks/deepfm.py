@@ -7,6 +7,7 @@ from ray.train.callbacks import JsonLoggerCallback, TBXLoggerCallback
 from sklearn.metrics import log_loss
 
 from phetware.train_fn import DeepFM
+from phetware.util import pprint_results
 from benchmarks.dataset import load_dataset_builtin
 
 
@@ -30,19 +31,17 @@ def train_deepfm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "fm_2_feature_defs": feature_defs["fm_2"],
             "dnn_feature_defs": feature_defs["dnn"],
             "seed": rand_seed,
-            "output_fn": torch.softmax,
-            "output_fn_args": dict(dim=0),
+            "output_fn": torch.sigmoid,
             "dnn_dropout": 0.2,
-            "epochs": 10,
-            "batch_size": 256,
+            "epochs": 100,
+            "batch_size": 32,
             "loss_fn": nn.BCELoss(),
-            "optimizer": torch.optim.Adagrad,
+            "optimizer": torch.optim.Adam,
             "metric_fns": [torchmetrics.AUROC(), log_loss],
             "torch_dataset_options": torch_dataset_options,
-            "summary_nn_arch": True
         })
     trainer.shutdown()
-    print(f"Results: {results[0][-1]}") # AUROC: 0.5934, log_loss: 0.9292
+    pprint_results(results, print_interval=10)
 
 
 if __name__ == "__main__":

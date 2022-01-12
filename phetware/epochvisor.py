@@ -1,3 +1,5 @@
+import time
+
 import torch
 import ray.train as train
 
@@ -54,6 +56,8 @@ class Epochvisor(object):
 
         results = []
         for epoch_id in range(start_epoch, self.epochs):
+            start_ts = time.time()
+
             train_dataset = next(self.train_dataset_iter)
             train_torch_dataset = train_dataset.to_torch(
                 label_column=label_column,
@@ -88,8 +92,10 @@ class Epochvisor(object):
                 epoch=epoch_id,
                 model_state_dict=self.model.state_dict(),
                 optimizer_state_dict=self.optimizer.state_dict())
+            end_ts = time.time()
             result = merge_results(
-                validation_result=validation_result, test_result=test_result)
+                validation_result=validation_result, test_result=test_result,
+                time_diff=end_ts - start_ts)
             train.report(**result)
             results.append(result)
         return results
