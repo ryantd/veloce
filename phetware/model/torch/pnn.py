@@ -10,7 +10,7 @@ class PNN(BaseModel):
     def __init__(
         self,
         # feature_defs
-        dnn_feature_defs,
+        dnn_feature_defs=None,
         # specific config
         use_inner=True, use_outter=False, outter_kernel_type='mat',
         # dnn related
@@ -18,7 +18,7 @@ class PNN(BaseModel):
         l2_reg_embedding=1e-5, l2_reg_dnn=0, dnn_dropout=0,
         # base config
         seed=1024, output_fn=torch.sigmoid, output_fn_args=None, device="cpu",
-        init_std=0.0001,
+        init_std=0.0001, **kwargs
     ):
         super(PNN, self).__init__(
             dnn_feature_defs=dnn_feature_defs, seed=seed, device=device)

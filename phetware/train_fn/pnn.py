@@ -22,7 +22,7 @@ class PNN(BaseTrainFn):
         self.l2_reg_dnn = config.get("l2_reg_dnn", 0)
 
         model = train.torch.prepare_model(_PNN(
-            self.dnn_feature_defs,
+            dnn_feature_defs=self.dnn_feature_defs,
             use_inner=self.use_inner, use_outter=self.use_outter,
             outter_kernel_type=self.outter_kernel_type,
             seed=self.seed, output_fn=self.output_fn,

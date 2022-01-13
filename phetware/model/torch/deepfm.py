@@ -10,7 +10,7 @@ class DeepFM(BaseModel):
     def __init__(
         self,
         # feature_defs
-        fm_1_feature_defs, fm_2_feature_defs, dnn_feature_defs,
+        fm_1_feature_defs=None, fm_2_feature_defs=None, dnn_feature_defs=None,
         # fm related
         use_fm=True, l2_reg_fm_1=1e-5, l2_reg_fm_2=1e-5,
         # dnn related
@@ -18,7 +18,7 @@ class DeepFM(BaseModel):
         l2_reg_embedding=1e-5, l2_reg_dnn=0, dnn_dropout=0,
         # base config
         seed=1024, output_fn=torch.sigmoid, output_fn_args=None, device="cpu",
-        init_std=0.0001,
+        init_std=0.0001, **kwargs
     ):
         super(DeepFM, self).__init__(
             fm_1_feature_defs=fm_1_feature_defs,

@@ -10,7 +10,7 @@ class WideAndDeep(BaseModel):
     def __init__(
         self,
         # feature defs
-        linear_feature_defs, dnn_feature_defs,
+        linear_feature_defs=None, dnn_feature_defs=None,
         # linear related
         l2_reg_linear=1e-5,
         # dnn related
@@ -18,7 +18,7 @@ class WideAndDeep(BaseModel):
         dnn_dropout=0, l2_reg_embedding=1e-5, l2_reg_dnn=0,
         # base configs
         seed=1024, output_fn=torch.sigmoid, output_fn_args=None, device="cpu",
-        init_std=0.0001,
+        init_std=0.0001, **kwargs
     ):
         super(WideAndDeep, self).__init__(
             linear_feature_defs=linear_feature_defs,

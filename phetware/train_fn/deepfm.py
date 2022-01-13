@@ -26,9 +26,9 @@ class DeepFM(BaseTrainFn):
         self.l2_reg_fm_2 = config.get("l2_reg_fm_2", 1e-5)
 
         model = train.torch.prepare_model(_DeepFM(
-            self.fm_1_feature_defs,
-            self.fm_2_feature_defs,
-            self.dnn_feature_defs,
+            fm_1_feature_defs=self.fm_1_feature_defs,
+            fm_2_feature_defs=self.fm_2_feature_defs,
+            dnn_feature_defs=self.dnn_feature_defs,
             use_fm=self.use_fm, seed=self.seed, output_fn=self.output_fn,
             output_fn_args=self.output_fn_args, device=self.device,
             dnn_hidden_units=self.dnn_hidden_units, dnn_use_bn=self.dnn_use_bn,
