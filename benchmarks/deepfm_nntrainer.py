@@ -1,10 +1,10 @@
 import torch
 import torch.nn as nn
-import ray
 from sklearn.metrics import log_loss
 
 from phetware.model.torch import DeepFM
 from phetware.util import pprint_results
+from phetware.environ import environ_validate
 from phetware import NeuralNetTrainer
 from benchmarks.dataset import load_dataset_builtin
 
@@ -44,5 +44,5 @@ def train_deepfm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
 
 
 if __name__ == "__main__":
-    ray.init(num_cpus=1 + 2)
-    train_deepfm_dist()
+    environ_validate(num_cpus=1 + 2)
+    train_deepfm_dist(num_workers=2)
