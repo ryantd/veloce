@@ -49,7 +49,7 @@ class Epochvisor(object):
         if self.checkpoint:
             model_state_dict = self.checkpoint.get("model_state_dict", None)
             optimizer_state_dict = self.checkpoint.get("optimizer_state_dict", None)
-            start_epoch = self.checkpoint.get("epoch", 0)
+            start_epoch = self.checkpoint.get("epoch_id", 0)
 
             self.model.load_state_dict(model_state_dict)
             self.optimizer.load_state_dict(optimizer_state_dict)
@@ -91,7 +91,7 @@ class Epochvisor(object):
                 test_result = self.test_epoch(test_torch_dataset)
 
             train.save_checkpoint(
-                epoch=epoch_id,
+                epoch_id=epoch_id,
                 model_state_dict=self.model.state_dict(),
                 optimizer_state_dict=self.optimizer.state_dict(),
             )

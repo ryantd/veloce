@@ -76,6 +76,6 @@ class NeuralNetTrainer(object):
             ))
             if use_checkpoint:
                 latest_ckpt = trainer.latest_checkpoint
-                latest_ckpt["epoch"] = 0
+                latest_ckpt["epoch_id"] = 0
         trainer.shutdown()
         return results

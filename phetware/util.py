@@ -33,7 +33,7 @@ def merge_results(validation_result, test_result, time_diff=None):
 def pprint_results(run_results, use_style=True, print_interval=1):
     s = StyleCoder(use_style)
     for run_idx, worker_results in enumerate(run_results):
-        print(f"\nRun {run_idx}: ")
+        print(f"\n{s('1')}Run {run_idx}: {s('0')}")
         for worker_idx, results in enumerate(worker_results):
             if not len(results): continue
             time_diff = results[0].pop(TIME_DIFF)
