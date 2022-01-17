@@ -9,6 +9,7 @@ from phetware.model.torch import (
     WideAndDeep as _WideAndDeep,
     DeepFM as _DeepFM,
     PNN as _PNN,
+    FNN as _FNN,
 )
 from phetware import Epochvisor
 
@@ -26,6 +27,7 @@ class BaseTrainFn(object):
         self.output_fn_args = config.get("output_fn_args", None)
         self.summary_nn_arch = config.get("summary_nn_arch", False)
         self.init_std = config.get("init_std", 0.0001)
+        self.ddp_options = config.get("ddp_options", None)
         self.checkpoint = train.load_checkpoint() or None
         self.device = train.torch.get_device()
 
@@ -87,7 +89,9 @@ class Generic(BaseTrainFn):
                 config[k] = reformat_input_features(v)
             else:
                 config[k] = v
-        model = train.torch.prepare_model(self.model(**config))
+        if self.ddp_options is None:
+            self.ddp_options = {}
+        model = train.torch.prepare_model(model=self.model(**config), ddp_kwargs=self.ddp_options)
         self.setup_model(model=model)
         return self.run_epochs()
 
@@ -96,3 +100,4 @@ class Generic(BaseTrainFn):
 WideAndDeep = Generic(_WideAndDeep)
 DeepFM = Generic(_DeepFM)
 PNN = Generic(_PNN)
+FNN = Generic(_FNN)

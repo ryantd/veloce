@@ -21,10 +21,12 @@ class NeuralNetTrainer(object):
         metric_fns,
         num_workers,
         use_gpu,
+        ddp_options=None,
         callbacks=None,
     ):
         self.model = module
         self.model_params = module_params
+        self.ddp_options = ddp_options
         self.dataset = dataset
         self.dataset_options = dataset_options
 
@@ -57,7 +59,7 @@ class NeuralNetTrainer(object):
         trainer = Trainer("torch", num_workers=self.num_workers, use_gpu=self.use_gpu)
         trainer.start()
         for run_addons in self.multi_runs:
-            addon_config = run_addons["config"] if "config" in run_addons else {}
+            addon_config = run_addons["model_params"] if "model_params" in run_addons else {}
             results.append(trainer.run(
                 train_func=Generic(self.model),
                 dataset=self.dataset,
@@ -68,6 +70,7 @@ class NeuralNetTrainer(object):
                     loss_fn=self.loss_fn,
                     optimizer=self.optimizer,
                     metric_fns=self.metric_fns,
+                    ddp_options=self.ddp_options,
                     torch_dataset_options=self.dataset_options,
                     **self.model_params,
                     **addon_config,
