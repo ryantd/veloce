@@ -69,13 +69,22 @@ pip install -U phetware
 
 ### `train_fn` manner
 ```shell
-# try wide and deep
-python -m labs.wdl
+# try `Wide and Deep`
+python -m benchmarks.wdl
+# try DeepFM
+python -m benchmarks.deepfm
+# try PNN
+python -m benchmarks.pnn
 ```
 
-### Native NN manner
+### `nn.Module` manner
 ```shell
-# comming soon
+# try `Wide and Deep`
+python -m benchmarks.wdl_nnt
+# try DeepFM
+python -m benchmarks.deepfm_nnt
+# try PNN
+python -m benchmarks.pnn_nnt
 ```
 
 <!-- ROADMAP -->
@@ -86,7 +95,7 @@ python -m labs.wdl
 - [x] Wide and Deep
 - [x] DeepFM
 - [ ] FNN
-- [ ] PNN
+- [x] PNN
 - [ ] DIN
 - [ ] DIEN
 <!-- - [ ] AFM
