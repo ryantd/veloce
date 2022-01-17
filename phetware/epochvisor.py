@@ -17,8 +17,8 @@ class Epochvisor(object):
         loss_fn,
         optimizer,
         device,
-        checkpoint,
         train_dataset_iter,
+        checkpoint=None,
         metric_fns=None,
         validation_dataset_iter=None,
         test_dataset_iter=None,
@@ -49,7 +49,7 @@ class Epochvisor(object):
         if self.checkpoint:
             model_state_dict = self.checkpoint.get("model_state_dict", None)
             optimizer_state_dict = self.checkpoint.get("optimizer_state_dict", None)
-            start_epoch = self.checkpoint.get("epoch", -1) + 1
+            start_epoch = self.checkpoint.get("epoch", 0)
 
             self.model.load_state_dict(model_state_dict)
             self.optimizer.load_state_dict(optimizer_state_dict)

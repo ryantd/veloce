@@ -1,8 +1,10 @@
 from ray.train import Trainer
 from ray.train.callbacks import JsonLoggerCallback, TBXLoggerCallback
+
 from phetware.train_fn import Generic
 
 callback_mapping = {"json": JsonLoggerCallback, "tbx": TBXLoggerCallback}
+DefaultRun = {}
 
 
 class NeuralNetTrainer(object):
@@ -41,22 +43,39 @@ class NeuralNetTrainer(object):
         else:
             self.callbacks = []
 
-    def run(self):
+    def run(self, multi_runs=None, runs_mode="sync", use_checkpoint=True):
+        if runs_mode != "sync":
+            raise ValueError("Arg run_mode not support non-sync")
+
+        if multi_runs is None:
+            self.multi_runs = [DefaultRun]
+        else:
+            self.multi_runs = multi_runs
+        results = []
+        latest_ckpt = None
+
         trainer = Trainer("torch", num_workers=self.num_workers, use_gpu=self.use_gpu)
         trainer.start()
-        results = trainer.run(
-            train_func=Generic(self.model),
-            dataset=self.dataset,
-            callbacks=self.callbacks,
-            config=dict(
-                epochs=self.epochs,
-                batch_size=self.batch_size,
-                loss_fn=self.loss_fn,
-                optimizer=self.optimizer,
-                metric_fns=self.metric_fns,
-                torch_dataset_options=self.dataset_options,
-                **self.model_params
-            ),
-        )
+        for run_addons in self.multi_runs:
+            addon_config = run_addons["config"] if "config" in run_addons else {}
+            results.append(trainer.run(
+                train_func=Generic(self.model),
+                dataset=self.dataset,
+                callbacks=self.callbacks,
+                config=dict(
+                    epochs=self.epochs,
+                    batch_size=self.batch_size,
+                    loss_fn=self.loss_fn,
+                    optimizer=self.optimizer,
+                    metric_fns=self.metric_fns,
+                    torch_dataset_options=self.dataset_options,
+                    **self.model_params,
+                    **addon_config,
+                ),
+                checkpoint=latest_ckpt
+            ))
+            if use_checkpoint:
+                latest_ckpt = trainer.latest_checkpoint
+                latest_ckpt["epoch"] = 0
         trainer.shutdown()
         return results

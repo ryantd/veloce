@@ -30,41 +30,44 @@ def merge_results(validation_result, test_result, time_diff=None):
     return result
 
 
-def pprint_results(worker_results, use_style=True, print_interval=1):
+def pprint_results(run_results, use_style=True, print_interval=1):
     s = StyleCoder(use_style)
-    for worker_idx, results in enumerate(worker_results):
-        time_diff = results[0].pop(TIME_DIFF)
-        acc_metrics = {k: v for k, v in results[0].items()}
-        total = len(results)
-        print(
-            f"\n{s('1')}========================="
-            f"\nWorker {worker_idx} training results"
-            f"\n========================={s('0')}"
-        )
-        for idx in range(print_interval - 1, total, print_interval):
-            val = results[idx]
-            if TIME_DIFF in val:
-                time_diff = val.pop(TIME_DIFF)
-            metrics_join = []
-            for k, v in val.items():
-                if idx == total - 1:
-                    acc_metrics[k] -= v
-                metrics_join.append(f"{k}: {'%.5f' % v}")
-            metrics_join = "\t".join(metrics_join)
-            print(f"[epoch {idx + 1}/{total}: {'%.3f' % time_diff}s]\t{metrics_join}")
-        print(
-            f"{s('1')}========================="
-            f"\nWorker {worker_idx} analysis"
-            f"\n========================={s('0')}"
-        )
-        print(
-            "\t".join(
-                [
-                    f"{s('1;32')}{k}: {'%.3f' % -(v*100)}%{s('0')}"
-                    if v > 0
-                    else f"{s('1;31')}{k}: +{'%.3f' % -(v*100)}%{s('0')}"
-                    for k, v in acc_metrics.items()
-                ]
+    for run_idx, worker_results in enumerate(run_results):
+        print(f"\nRun {run_idx}: ")
+        for worker_idx, results in enumerate(worker_results):
+            if not len(results): continue
+            time_diff = results[0].pop(TIME_DIFF)
+            acc_metrics = {k: v for k, v in results[0].items()}
+            total = len(results)
+            print(
+                f"\n{s('1')}========================="
+                f"\nWorker {worker_idx} training results"
+                f"\n========================={s('0')}"
             )
-        )
+            for idx in range(print_interval - 1, total, print_interval):
+                val = results[idx]
+                if TIME_DIFF in val:
+                    time_diff = val.pop(TIME_DIFF)
+                metrics_join = []
+                for k, v in val.items():
+                    if idx == total - 1:
+                        acc_metrics[k] -= v
+                    metrics_join.append(f"{k}: {'%.5f' % v}")
+                metrics_join = "\t".join(metrics_join)
+                print(f"[epoch {idx + 1}/{total}: {'%.3f' % time_diff}s]\t{metrics_join}")
+            print(
+                f"{s('1')}========================="
+                f"\nWorker {worker_idx} analysis"
+                f"\n========================={s('0')}"
+            )
+            print(
+                "\t".join(
+                    [
+                        f"{s('1;32')}{k}: {'%.3f' % -(v*100)}%{s('0')}"
+                        if v > 0
+                        else f"{s('1;31')}{k}: +{'%.3f' % -(v*100)}%{s('0')}"
+                        for k, v in acc_metrics.items()
+                    ]
+                )
+            )
     print("\n")
