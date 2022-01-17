@@ -18,7 +18,9 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         dataset_name="criteo_mini",
         feature_def_settings={
             "dnn": {"dense": True, "sparse": True},
-            "linear": {"dense": True, "sparse": False}})
+            "linear": {"dense": True, "sparse": False},
+        },
+    )
 
     trainer = Trainer("torch", num_workers=num_workers, use_gpu=use_gpu)
     trainer.start()
@@ -43,16 +45,26 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "loss_fn": LossFnStack(
                 # support multiple loss functions with fixed weight
                 dict(fn=nn.BCELoss(), weight=0.2),
-                dict(fn=nn.HingeEmbeddingLoss(), weight=0.8)),
+                dict(fn=nn.HingeEmbeddingLoss(), weight=0.8),
+            ),
             "optimizer": OptimizerStack(
                 # support multiple optimizers
                 dict(cls=torch.optim.Adagrad, model_key="deep_model"),
-                dict(cls=FTRL, args=dict(alpha=1.0, beta=1.0, l1=1.0, l2=1.0), model_key="wide_model")),
+                dict(
+                    cls=FTRL,
+                    args=dict(alpha=1.0, beta=1.0, l1=1.0, l2=1.0),
+                    model_key="wide_model",
+                ),
+            ),
             "metric_fns": [
                 # support torchmetrics and sklearn metric funcs
-                torchmetrics.AUROC(), log_loss, torchmetrics.MeanSquaredError(squared=False)],
-            "torch_dataset_options": torch_dataset_options
-        })
+                torchmetrics.AUROC(),
+                log_loss,
+                torchmetrics.MeanSquaredError(squared=False),
+            ],
+            "torch_dataset_options": torch_dataset_options,
+        },
+    )
     trainer.shutdown()
     pprint_results(results, print_interval=10)
 

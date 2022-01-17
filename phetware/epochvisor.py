@@ -75,9 +75,10 @@ class Epochvisor(object):
                     feature_columns=feature_columns,
                     label_column_dtype=label_column_dtype,
                     feature_column_dtypes=feature_column_dtypes,
-                    batch_size=self.batch_size)
+                    batch_size=self.batch_size,
+                )
                 validation_result = self.validate_epoch(validation_torch_dataset)
-            
+
             if self.test_dataset_iter:
                 test_dataset = next(self.test_dataset_iter)
                 test_torch_dataset = test_dataset.to_torch(
@@ -85,17 +86,21 @@ class Epochvisor(object):
                     feature_columns=feature_columns,
                     label_column_dtype=label_column_dtype,
                     feature_column_dtypes=feature_column_dtypes,
-                    batch_size=self.batch_size)
+                    batch_size=self.batch_size,
+                )
                 test_result = self.test_epoch(test_torch_dataset)
 
             train.save_checkpoint(
                 epoch=epoch_id,
                 model_state_dict=self.model.state_dict(),
-                optimizer_state_dict=self.optimizer.state_dict())
+                optimizer_state_dict=self.optimizer.state_dict(),
+            )
             end_ts = time.time()
             result = merge_results(
-                validation_result=validation_result, test_result=test_result,
-                time_diff=end_ts - start_ts)
+                validation_result=validation_result,
+                test_result=test_result,
+                time_diff=end_ts - start_ts,
+            )
             train.report(**result)
             results.append(result)
         return results
@@ -127,7 +132,7 @@ class Epochvisor(object):
         loss /= num_batches
         result = {"loss": loss}
         return result
-    
+
     def test_epoch(self, test_iterable_ds):
         num_batches = 0
         sklearn_intermediates = dict()
@@ -145,7 +150,8 @@ class Epochvisor(object):
                         if type(fn).__name__ not in sklearn_intermediates:
                             sklearn_intermediates[fn.__name__] = 0
                         sklearn_intermediates[fn.__name__] += fn(
-                            y.cpu().data.numpy(), pred.cpu().data.numpy())
+                            y.cpu().data.numpy(), pred.cpu().data.numpy()
+                        )
         # torchmetrics compute and reset
         for fn in self.metric_fns:
             if get_package_name(fn) == "torchmetrics":

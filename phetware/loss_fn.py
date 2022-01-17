@@ -5,4 +5,6 @@ class LossFnStack(object):
         self.loss_fns = loss_fns
 
     def __call__(self, pred, y):
-        return sum([fn_wrap["weight"] * fn_wrap["fn"](pred, y) for fn_wrap in self.loss_fns])
+        return sum(
+            [fn_wrap["weight"] * fn_wrap["fn"](pred, y) for fn_wrap in self.loss_fns]
+        )

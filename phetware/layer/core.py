@@ -6,9 +6,17 @@ from .activation import activation_gen
 
 class DNN(nn.Module):
     def __init__(
-        self, inputs_dim, hidden_units, activation='relu', l2_reg=0,
-        dropout_rate=0, use_bn=False, init_std=0.0001, dice_dim=3, seed=1024,
-        device='cpu'
+        self,
+        inputs_dim,
+        hidden_units,
+        activation="relu",
+        l2_reg=0,
+        dropout_rate=0,
+        use_bn=False,
+        init_std=0.0001,
+        dice_dim=3,
+        seed=1024,
+        device="cpu",
     ):
         super(DNN, self).__init__()
         if len(hidden_units) == 0:
@@ -25,17 +33,17 @@ class DNN(nn.Module):
         self.activation_layers = nn.ModuleList()
         if self.use_bn:
             self.bn_layers = nn.ModuleList()
-        
+
         for i in range(len(hidden_units) - 1):
-            self.linear_layers.append(
-                nn.Linear(hidden_units[i], hidden_units[i + 1]))
+            self.linear_layers.append(nn.Linear(hidden_units[i], hidden_units[i + 1]))
             self.activation_layers.append(
-                activation_gen(activation, hidden_units[i + 1], dice_dim))
+                activation_gen(activation, hidden_units[i + 1], dice_dim)
+            )
             if self.use_bn:
                 self.bn_layers.append(nn.BatchNorm1d(hidden_units[i + 1]))
 
         for name, tensor in self.linear_layers.named_parameters():
-            if 'weight' in name:
+            if "weight" in name:
                 nn.init.normal_(tensor, mean=0, std=init_std)
 
         self.to(device)

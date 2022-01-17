@@ -14,8 +14,8 @@ from benchmarks.dataset import load_dataset_builtin
 def train_pnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     datasets, feature_defs, torch_dataset_options = load_dataset_builtin(
         dataset_name="criteo_mini",
-        feature_def_settings={
-            "dnn": {"dense": True, "sparse": True}})
+        feature_def_settings={"dnn": {"dense": True, "sparse": True}},
+    )
 
     trainer = Trainer("torch", num_workers=num_workers, use_gpu=use_gpu)
     trainer.start()
@@ -36,7 +36,8 @@ def train_pnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "optimizer": torch.optim.Adam,
             "metric_fns": [torchmetrics.AUROC(), log_loss],
             "torch_dataset_options": torch_dataset_options,
-        })
+        },
+    )
     trainer.shutdown()
     pprint_results(results)
 

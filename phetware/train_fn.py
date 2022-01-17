@@ -5,8 +5,11 @@ import ray.train as train
 
 from phetware.util import get_package_name
 from phetware.inputs import reformat_input_features
-from phetware.model.torch import (WideAndDeep as _WideAndDeep,
-    DeepFM as _DeepFM, PNN as _PNN)
+from phetware.model.torch import (
+    WideAndDeep as _WideAndDeep,
+    DeepFM as _DeepFM,
+    PNN as _PNN,
+)
 from phetware import Epochvisor
 
 
@@ -39,7 +42,7 @@ class BaseTrainFn(object):
             self.test_dataset_iterator = test_dataset_shard.iter_datasets()
         except:
             self.test_dataset_iterator = None
-    
+
     def setup_model(self, model):
         self.model = model
         if get_package_name(self.optimizer) == "torch":
@@ -49,18 +52,25 @@ class BaseTrainFn(object):
         else:
             raise ValueError("optimizer must be given and valid")
         self.setup_epv()
-        if self.summary_nn_arch: print(model)
-    
+        if self.summary_nn_arch:
+            print(model)
+
     def setup_epv(self):
         self.epv = Epochvisor(
-            epochs=self.epochs, train_dataset_iter=self.train_dataset_iterator,
+            epochs=self.epochs,
+            train_dataset_iter=self.train_dataset_iterator,
             validation_dataset_iter=self.validation_dataset_iterator,
             test_dataset_iter=self.test_dataset_iterator,
             dataset_options=self.torch_dataset_options,
-            batch_size=self.batch_size, model=self.model, loss_fn=self.loss_fn,
-            optimizer=self.optimizer, metric_fns=self.metric_fns,
-            device=self.device, checkpoint=self.checkpoint)
-    
+            batch_size=self.batch_size,
+            model=self.model,
+            loss_fn=self.loss_fn,
+            optimizer=self.optimizer,
+            metric_fns=self.metric_fns,
+            device=self.device,
+            checkpoint=self.checkpoint,
+        )
+
     def run_epochs(self):
         return self.epv.run_epochs()
 
@@ -80,6 +90,7 @@ class Generic(BaseTrainFn):
         model = train.torch.prepare_model(self.model(**config))
         self.setup_model(model=model)
         return self.run_epochs()
+
 
 # native train fns
 WideAndDeep = Generic(_WideAndDeep)

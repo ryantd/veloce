@@ -13,8 +13,8 @@ from benchmarks.dataset import load_dataset_builtin
 def train_pnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     datasets, feature_defs, torch_dataset_options = load_dataset_builtin(
         dataset_name="criteo_mini",
-        feature_def_settings={
-            "dnn": {"dense": True, "sparse": True}})
+        feature_def_settings={"dnn": {"dense": True, "sparse": True}},
+    )
 
     trainer = NeuralNetTrainer(
         # module and dataset configs
@@ -24,7 +24,8 @@ def train_pnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "use_inner": True,
             "seed": rand_seed,
             "output_fn": torch.sigmoid,
-            "dnn_dropout": 0.2},
+            "dnn_dropout": 0.2,
+        },
         dataset=datasets,
         dataset_options=torch_dataset_options,
         # trainer configs
@@ -35,7 +36,7 @@ def train_pnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         metric_fns=[torchmetrics.AUROC(), log_loss],
         num_workers=num_workers,
         use_gpu=use_gpu,
-        callbacks=["json", "tbx"]
+        callbacks=["json", "tbx"],
     )
     results = trainer.run()
     pprint_results(results)

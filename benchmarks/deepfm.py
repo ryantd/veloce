@@ -17,7 +17,9 @@ def train_deepfm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         feature_def_settings={
             "fm_1": {"dense": True, "sparse": True},
             "fm_2": {"dense": False, "sparse": True},
-            "dnn": {"dense": True, "sparse": True}})
+            "dnn": {"dense": True, "sparse": True},
+        },
+    )
 
     trainer = Trainer("torch", num_workers=num_workers, use_gpu=use_gpu)
     trainer.start()
@@ -39,7 +41,8 @@ def train_deepfm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "optimizer": torch.optim.Adam,
             "metric_fns": [torchmetrics.AUROC(), log_loss],
             "torch_dataset_options": torch_dataset_options,
-        })
+        },
+    )
     trainer.shutdown()
     pprint_results(results, print_interval=10)
 

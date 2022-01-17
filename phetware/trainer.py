@@ -2,18 +2,24 @@ from ray.train import Trainer
 from ray.train.callbacks import JsonLoggerCallback, TBXLoggerCallback
 from phetware.train_fn import Generic
 
-callback_mapping = {
-    "json": JsonLoggerCallback,
-    "tbx": TBXLoggerCallback
-}
+callback_mapping = {"json": JsonLoggerCallback, "tbx": TBXLoggerCallback}
 
 
 class NeuralNetTrainer(object):
     def __init__(
         self,
-        module, module_params, dataset, dataset_options,
-        epochs, batch_size, loss_fn, optimizer, metric_fns,
-        num_workers, use_gpu, callbacks=None
+        module,
+        module_params,
+        dataset,
+        dataset_options,
+        epochs,
+        batch_size,
+        loss_fn,
+        optimizer,
+        metric_fns,
+        num_workers,
+        use_gpu,
+        callbacks=None,
     ):
         self.model = module
         self.model_params = module_params
@@ -34,7 +40,7 @@ class NeuralNetTrainer(object):
             self.callbacks = [callback_mapping[l]() for l in self.callbacks]
         else:
             self.callbacks = []
-    
+
     def run(self):
         trainer = Trainer("torch", num_workers=self.num_workers, use_gpu=self.use_gpu)
         trainer.start()
@@ -50,6 +56,7 @@ class NeuralNetTrainer(object):
                 metric_fns=self.metric_fns,
                 torch_dataset_options=self.dataset_options,
                 **self.model_params
-            ))
+            ),
+        )
         trainer.shutdown()
         return results

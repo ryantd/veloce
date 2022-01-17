@@ -17,7 +17,7 @@ class Dice(nn.Module):
         - https://github.com/zhougr1993/DeepInterestNetwork, https://github.com/fanoping/DIN-pytorch
     """
 
-    def __init__(self, emb_size, dim=2, epsilon=1e-8, device='cpu'):
+    def __init__(self, emb_size, dim=2, epsilon=1e-8, device="cpu"):
         super(Dice, self).__init__()
         assert dim == 2 or dim == 3
 
@@ -45,7 +45,6 @@ class Dice(nn.Module):
 
 
 class Identity(nn.Module):
-
     def __init__(self, **kwargs):
         super(Identity, self).__init__()
 
@@ -64,16 +63,16 @@ def activation_gen(act_name, hidden_size=None, dice_dim=2):
         act_layer: activation layer
     """
     if isinstance(act_name, str):
-        if act_name.lower() == 'sigmoid':
+        if act_name.lower() == "sigmoid":
             act_layer = nn.Sigmoid()
-        elif act_name.lower() == 'linear':
+        elif act_name.lower() == "linear":
             act_layer = Identity()
-        elif act_name.lower() == 'relu':
+        elif act_name.lower() == "relu":
             act_layer = nn.ReLU(inplace=True)
-        elif act_name.lower() == 'dice':
+        elif act_name.lower() == "dice":
             assert dice_dim
             act_layer = Dice(hidden_size, dice_dim)
-        elif act_name.lower() == 'prelu':
+        elif act_name.lower() == "prelu":
             act_layer = nn.PReLU()
     elif issubclass(act_name, nn.Module):
         act_layer = act_name()
