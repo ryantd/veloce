@@ -21,7 +21,7 @@ def train_pnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     trainer.start()
 
     results = trainer.run(
-        train_func=PNN(),
+        train_func=PNN,
         dataset=datasets,
         callbacks=[JsonLoggerCallback(), TBXLoggerCallback()],
         config={

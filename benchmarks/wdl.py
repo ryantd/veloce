@@ -24,7 +24,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     trainer.start()
 
     results = trainer.run(
-        train_func=WideAndDeep(),
+        train_func=WideAndDeep,
         dataset=datasets,
         callbacks=[JsonLoggerCallback(), TBXLoggerCallback()],
         # support fault tolerance with checkpoints

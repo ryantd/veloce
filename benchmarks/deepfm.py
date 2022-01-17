@@ -23,7 +23,7 @@ def train_deepfm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     trainer.start()
 
     results = trainer.run(
-        train_func=DeepFM(),
+        train_func=DeepFM,
         dataset=datasets,
         callbacks=[JsonLoggerCallback(), TBXLoggerCallback()],
         config={

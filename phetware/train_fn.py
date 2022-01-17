@@ -4,6 +4,9 @@ import torchmetrics
 import ray.train as train
 
 from phetware.util import get_package_name
+from phetware.inputs import reformat_input_features
+from phetware.model.torch import (WideAndDeep as _WideAndDeep,
+    DeepFM as _DeepFM, PNN as _PNN)
 from phetware import Epochvisor
 
 
@@ -60,3 +63,25 @@ class BaseTrainFn(object):
     
     def run_epochs(self):
         return self.epv.run_epochs()
+
+
+class Generic(BaseTrainFn):
+    def __init__(self, model):
+        self.model = model
+
+    def __call__(self, origin_config):
+        super(Generic, self).__call__(origin_config)
+        config = dict()
+        for k, v in origin_config.items():
+            if k.endswith("_feature_defs"):
+                config[k] = reformat_input_features(v)
+            else:
+                config[k] = v
+        model = train.torch.prepare_model(self.model(**config))
+        self.setup_model(model=model)
+        return self.run_epochs()
+
+# native train fns
+WideAndDeep = Generic(_WideAndDeep)
+DeepFM = Generic(_DeepFM)
+PNN = Generic(_PNN)
