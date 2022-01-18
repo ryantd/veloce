@@ -4,11 +4,28 @@ TIME_DIFF = "epoch_seconds"
 
 
 class StyleCoder(object):
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKCYAN = "\033[96m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
+
     def __init__(self, use_style):
         self.use_style = use_style
 
-    def __call__(self, code):
-        return f"\033[{code}m" if self.use_style else ""
+    def __getattr__(self, code):
+        if self.use_style:
+            try:
+                rc = getattr(self, code)
+            except:
+                raise AttributeError("Arg code is not valid")
+        else:
+            rc = ""
+        return rc
 
 
 def get_package_name(func):
@@ -41,7 +58,7 @@ def merge_results(validation_result, test_result, time_diff=None):
 def pprint_results(run_results, use_style=True, print_interval=1):
     s = StyleCoder(use_style)
     for run_idx, worker_results in enumerate(run_results):
-        print(f"\n{s('1')}Run {run_idx}: {s('0')}")
+        print(f"\n{s.BOLD}Run {run_idx}: {s.ENDC}")
         for worker_idx, results in enumerate(worker_results):
             if not len(results):
                 continue
@@ -49,9 +66,9 @@ def pprint_results(run_results, use_style=True, print_interval=1):
             acc_metrics = {k: v for k, v in results[0].items()}
             total = len(results)
             print(
-                f"{s('1')}========================="
+                f"{s.BOLD}========================="
                 f"\nWorker {worker_idx} training results"
-                f"\n========================={s('0')}"
+                f"\n========================={s.ENDC}"
             )
             for idx in range(print_interval - 1, total, print_interval):
                 val = results[idx]
@@ -66,19 +83,15 @@ def pprint_results(run_results, use_style=True, print_interval=1):
                 print(
                     f"[epoch {idx + 1}/{total}: {'%.3f' % time_diff}s]\t{metrics_join}"
                 )
+            acc_metrics_join = "\t".join([
+                f"{s.OKGREEN}{k}: {'%.3f' % -(v*100)}%{s.ENDC}"
+                if v > 0
+                else f"{s.FAIL}{k}: +{'%.3f' % -(v*100)}%{s.ENDC}"
+                for k, v in acc_metrics.items()
+            ])
             print(
-                f"{s('1')}========================="
+                f"{s.BOLD}================="
                 f"\nWorker {worker_idx} analysis"
-                f"\n========================={s('0')}"
+                f"\n================={s.ENDC}"
+                f"\n{acc_metrics_join}\n"
             )
-            print(
-                "\t".join(
-                    [
-                        f"{s('1;32')}{k}: {'%.3f' % -(v*100)}%{s('0')}"
-                        if v > 0
-                        else f"{s('1;31')}{k}: +{'%.3f' % -(v*100)}%{s('0')}"
-                        for k, v in acc_metrics.items()
-                    ]
-                )
-            )
-    print("\n")
