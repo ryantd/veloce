@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torchmetrics.functional import auroc
 from sklearn.metrics import log_loss
 
 from phetware.util import pprint_results
@@ -43,7 +44,7 @@ class LR(BaseModel):
 
 def train_lr_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     datasets, feature_defs, torch_dataset_options = load_dataset_builtin(
-        dataset_name="criteo_mini",
+        dataset_name="criteo_10k",
         feature_def_settings={
             "linear": {"dense": True, "sparse": True},
         },
@@ -59,11 +60,11 @@ def train_lr_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         dataset=datasets,
         dataset_options=torch_dataset_options,
         # trainer configs
-        epochs=10,
-        batch_size=32,
+        epochs=20,
+        batch_size=512,
         loss_fn=nn.BCELoss(),
         optimizer=torch.optim.Adam,
-        metric_fns=[log_loss],
+        metric_fns=[auroc, log_loss],
         num_workers=num_workers,
         use_gpu=use_gpu,
         callbacks=["json", "tbx"],
