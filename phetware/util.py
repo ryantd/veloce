@@ -41,7 +41,7 @@ def pprint_results(run_results, use_style=True, print_interval=1):
             acc_metrics = {k: v for k, v in results[0].items()}
             total = len(results)
             print(
-                f"\n{s('1')}========================="
+                f"{s('1')}========================="
                 f"\nWorker {worker_idx} training results"
                 f"\n========================={s('0')}"
             )

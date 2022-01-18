@@ -13,8 +13,13 @@ from benchmarks.dataset import load_dataset_builtin
 class LR(BaseModel):
     def __init__(
         self,
-        linear_feature_defs=None, l2_reg_linear=1e-5, seed=1024, device="cpu",
-        output_fn=torch.sigmoid, output_fn_args=None, **kwargs
+        linear_feature_defs=None,
+        l2_reg_linear=1e-5,
+        seed=1024,
+        device="cpu",
+        output_fn=torch.sigmoid,
+        output_fn_args=None,
+        **kwargs
     ):
         super(LR, self).__init__(
             linear_feature_defs=linear_feature_defs,

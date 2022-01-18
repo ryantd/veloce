@@ -63,7 +63,9 @@ class NeuralNetTrainer(object):
         for run_addons in self.multi_runs:
             addon_params = (
                 # only support module_params update
-                run_addons["module_params"] if "module_params" in run_addons else {}
+                run_addons["module_params"]
+                if "module_params" in run_addons
+                else {}
             )
             local_params = copy.deepcopy(self.model_params)
             local_params.update(addon_params)

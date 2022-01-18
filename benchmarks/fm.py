@@ -6,7 +6,11 @@ from phetware.util import pprint_results
 from phetware.environ import environ_validate
 from phetware.layer import OutputLayer, FM as FMLayer
 from phetware.model.torch.base import BaseModel
-from phetware.inputs import (embedding_dict_gen, collect_inputs_and_embeddings, concat_dnn_inputs)
+from phetware.inputs import (
+    embedding_dict_gen,
+    collect_inputs_and_embeddings,
+    concat_dnn_inputs,
+)
 from phetware import NeuralNetTrainer
 from benchmarks.dataset import load_dataset_builtin
 
@@ -14,8 +18,14 @@ from benchmarks.dataset import load_dataset_builtin
 class FM(BaseModel):
     def __init__(
         self,
-        fm_feature_defs=None, l2_reg_fm=1e-5, seed=1024, device="cpu",
-        output_fn=torch.sigmoid, output_fn_args=None, init_std=0.0001, **kwargs
+        fm_feature_defs=None,
+        l2_reg_fm=1e-5,
+        seed=1024,
+        device="cpu",
+        output_fn=torch.sigmoid,
+        output_fn_args=None,
+        init_std=0.0001,
+        **kwargs
     ):
         super(FM, self).__init__(
             fm_feature_defs=fm_feature_defs,
