@@ -28,7 +28,7 @@ class MetricAccumulator(object):
         results = dict()
         # torchmetrics module compute and reset
         for fn in self.metric_fns:
-            if get_package_name(fn) == "torchmetrics":
+            if get_package_name(fn) == "torchmetrics" and get_type(fn) != "function":
                 results[get_type(fn)] = fn.compute().item()
                 fn.reset()
         # torchmetrics functional compute
