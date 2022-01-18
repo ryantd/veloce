@@ -1,9 +1,45 @@
 import time
+from collections import defaultdict
 
 import torch
 import ray.train as train
 
-from .util import get_package_name, merge_results
+from .util import get_package_name, merge_results, get_type, get_func_name
+
+
+class MetricAccumulator(object):
+    def __init__(self, metric_fns):
+        self.sklearn_intermediates = defaultdict(int)
+        self.torchm_intermediates = defaultdict(int)
+        self.metric_fns = metric_fns
+
+    def acc(self, pred, y):
+        for fn in self.metric_fns:
+            if get_package_name(fn) == "torchmetrics":
+                r = fn(pred, y.int())
+                if get_type(fn) != "function":
+                    return
+                self.torchm_intermediates[get_func_name(fn)] += r
+            elif get_package_name(fn) == "sklearn":
+                self.sklearn_intermediates[get_func_name(fn)] += fn(
+                    y.cpu().data.numpy(), pred.cpu().data.numpy())
+
+    def result_gen(self, num_batches):
+        results = dict()
+        # torchmetrics module compute and reset
+        for fn in self.metric_fns:
+            if get_package_name(fn) == "torchmetrics":
+                results[get_type(fn)] = fn.compute().item()
+                fn.reset()
+        # torchmetrics functional compute
+        for name in self.torchm_intermediates.keys():
+            self.torchm_intermediates[name] /= num_batches
+        # sklearn compute
+        for name in self.sklearn_intermediates.keys():
+            self.sklearn_intermediates[name] /= num_batches
+        results.update(self.torchm_intermediates)
+        results.update(self.sklearn_intermediates)
+        return results
 
 
 class Epochvisor(object):
@@ -135,30 +171,12 @@ class Epochvisor(object):
 
     def test_epoch(self, test_iterable_ds):
         num_batches = 0
-        sklearn_intermediates = dict()
-        results = dict()
+        ma = MetricAccumulator(self.metric_fns)
         with torch.no_grad():
             for _, (X, y) in enumerate(test_iterable_ds):
                 X = X.to(self.device)
                 y = y.to(self.device)
                 num_batches += 1
                 pred = self.model(X)
-                for fn in self.metric_fns:
-                    if get_package_name(fn) == "torchmetrics":
-                        fn(pred, y.int())
-                    elif get_package_name(fn) == "sklearn":
-                        if type(fn).__name__ not in sklearn_intermediates:
-                            sklearn_intermediates[fn.__name__] = 0
-                        sklearn_intermediates[fn.__name__] += fn(
-                            y.cpu().data.numpy(), pred.cpu().data.numpy()
-                        )
-        # torchmetrics compute and reset
-        for fn in self.metric_fns:
-            if get_package_name(fn) == "torchmetrics":
-                results[type(fn).__name__] = fn.compute().item()
-                fn.reset()
-        # sklearn compute
-        for name in sklearn_intermediates.keys():
-            sklearn_intermediates[name] /= num_batches
-        results.update(sklearn_intermediates)
-        return results
+                ma.acc(pred=pred, y=y)
+        return ma.result_gen(num_batches=num_batches)

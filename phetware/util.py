@@ -19,6 +19,14 @@ def get_module_name(func):
     return inspect.getmodule(func).__name__
 
 
+def get_type(func):
+    return type(func).__name__
+
+
+def get_func_name(func):
+    return func.__name__
+
+
 def merge_results(validation_result, test_result, time_diff=None):
     result = dict()
     for k, v in validation_result.items():
