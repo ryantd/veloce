@@ -42,7 +42,9 @@ def train_fnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         use_gpu=use_gpu,
         callbacks=["json", "tbx"],
     )
-    results = trainer.run(multi_runs=[DefaultRun, dict(module_params=dict(pre_trained_mode=False))])
+    results = trainer.run(
+        multi_runs=[DefaultRun, {"module_params": {"pre_trained_mode": False}}]
+    )
     pprint_results(results)
 
 

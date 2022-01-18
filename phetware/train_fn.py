@@ -91,7 +91,9 @@ class Generic(BaseTrainFn):
                 config[k] = v
         if self.ddp_options is None:
             self.ddp_options = {}
-        model = train.torch.prepare_model(model=self.model(**config), ddp_kwargs=self.ddp_options)
+        model = train.torch.prepare_model(
+            model=self.model(**config), ddp_kwargs=self.ddp_options
+        )
         self.setup_model(model=model)
         return self.run_epochs()
 

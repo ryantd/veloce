@@ -1,3 +1,5 @@
+import copy
+
 from ray.train import Trainer
 from ray.train.callbacks import JsonLoggerCallback, TBXLoggerCallback
 
@@ -59,24 +61,30 @@ class NeuralNetTrainer(object):
         trainer = Trainer("torch", num_workers=self.num_workers, use_gpu=self.use_gpu)
         trainer.start()
         for run_addons in self.multi_runs:
-            addon_config = run_addons["model_params"] if "model_params" in run_addons else {}
-            results.append(trainer.run(
-                train_func=Generic(self.model),
-                dataset=self.dataset,
-                callbacks=self.callbacks,
-                config=dict(
-                    epochs=self.epochs,
-                    batch_size=self.batch_size,
-                    loss_fn=self.loss_fn,
-                    optimizer=self.optimizer,
-                    metric_fns=self.metric_fns,
-                    ddp_options=self.ddp_options,
-                    torch_dataset_options=self.dataset_options,
-                    **self.model_params,
-                    **addon_config,
-                ),
-                checkpoint=latest_ckpt
-            ))
+            addon_params = (
+                # only support module_params update
+                run_addons["module_params"] if "module_params" in run_addons else {}
+            )
+            local_params = copy.deepcopy(self.model_params)
+            local_params.update(addon_params)
+            results.append(
+                trainer.run(
+                    train_func=Generic(self.model),
+                    dataset=self.dataset,
+                    callbacks=self.callbacks,
+                    config=dict(
+                        epochs=self.epochs,
+                        batch_size=self.batch_size,
+                        loss_fn=self.loss_fn,
+                        optimizer=self.optimizer,
+                        metric_fns=self.metric_fns,
+                        ddp_options=self.ddp_options,
+                        torch_dataset_options=self.dataset_options,
+                        **local_params,
+                    ),
+                    checkpoint=latest_ckpt,
+                )
+            )
             if use_checkpoint:
                 latest_ckpt = trainer.latest_checkpoint
                 latest_ckpt["epoch_id"] = 0

@@ -35,7 +35,8 @@ def pprint_results(run_results, use_style=True, print_interval=1):
     for run_idx, worker_results in enumerate(run_results):
         print(f"\n{s('1')}Run {run_idx}: {s('0')}")
         for worker_idx, results in enumerate(worker_results):
-            if not len(results): continue
+            if not len(results):
+                continue
             time_diff = results[0].pop(TIME_DIFF)
             acc_metrics = {k: v for k, v in results[0].items()}
             total = len(results)
@@ -54,7 +55,9 @@ def pprint_results(run_results, use_style=True, print_interval=1):
                         acc_metrics[k] -= v
                     metrics_join.append(f"{k}: {'%.5f' % v}")
                 metrics_join = "\t".join(metrics_join)
-                print(f"[epoch {idx + 1}/{total}: {'%.3f' % time_diff}s]\t{metrics_join}")
+                print(
+                    f"[epoch {idx + 1}/{total}: {'%.3f' % time_diff}s]\t{metrics_join}"
+                )
             print(
                 f"{s('1')}========================="
                 f"\nWorker {worker_idx} analysis"
