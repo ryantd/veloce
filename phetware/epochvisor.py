@@ -18,7 +18,7 @@ class MetricAccumulator(object):
             if get_package_name(fn) == "torchmetrics":
                 r = fn(pred, y.int())
                 if get_type(fn) != "function":
-                    return
+                    continue
                 self.torchm_intermediates[get_func_name(fn)] += r
             elif get_package_name(fn) == "sklearn":
                 self.sklearn_intermediates[get_func_name(fn)] += fn(
