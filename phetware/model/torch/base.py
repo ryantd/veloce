@@ -18,7 +18,6 @@ class BaseModel(nn.Module):
         del kwargs["seed"]
         del kwargs["device"]
 
-        # produce dense and sparse fds on dnn and linear inputs respectively
         self.fds = FeatureDefSet(kwargs)
         self.fds.sorter()
 
