@@ -1,11 +1,11 @@
 import torch
 import torch.nn as nn
 from torchmetrics.functional import auroc
-from sklearn.metrics import log_loss
 
 from phetware.util import pprint_results
 from phetware.environ import environ_validate
 from phetware.layer import OutputLayer
+from phetware.optimizer import FTRL
 from phetware.model.torch.base import BaseModel, Linear
 from phetware import NeuralNetTrainer
 from benchmarks.dataset import load_dataset_builtin
@@ -63,7 +63,7 @@ def train_lr_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         epochs=20,
         batch_size=512,
         loss_fn=nn.BCELoss(),
-        optimizer=torch.optim.Adam,
+        optimizer=FTRL,
         metric_fns=[auroc],
         num_workers=num_workers,
         use_gpu=use_gpu,
@@ -71,6 +71,13 @@ def train_lr_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     )
     results = trainer.run()
     pprint_results(results)
+    """
+    optimizer=Adam
+    valid/BCELoss: 0.49980	valid/auroc: 0.73877
+
+    optimizer=FTRL
+    valid/BCELoss: 0.51735	valid/auroc: 0.71106
+    """
 
 
 if __name__ == "__main__":

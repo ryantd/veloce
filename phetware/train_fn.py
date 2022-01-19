@@ -42,7 +42,7 @@ class BaseTrainFn(object):
 
     def setup_model(self, model):
         self.model = model
-        if get_package_name(self.optimizer) == "torch":
+        if get_package_name(self.optimizer) == "torch" or (get_package_name(self.optimizer) == "phetware" and type(self.optimizer).__name__ != "OptimizerStack"):
             self.optimizer = self.optimizer(model.parameters())
         elif type(self.optimizer).__name__ == "OptimizerStack":
             self.optimizer.compile(self.model.module)

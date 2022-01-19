@@ -6,6 +6,8 @@ from phetware.preprocessing import fillna, MinMaxScaler, LabelEncoder
 from phetware.feature_column import SparseFeatureDef, DenseFeatureDef
 from .mapping import BUILTIN_DATASET_FEATS_MAPPING
 
+FEAT_DEF_RESERVED_GLOBAL="_global"
+
 
 def load_dataset_builtin(
     dataset_name="criteo_mini",
@@ -38,7 +40,7 @@ def load_dataset_builtin(
 
     # process feature defs
     sparse_defs = ds.map_batches(
-        SparseFeatureDef(sparse_feat_names), batch_format="pandas"
+        SparseFeatureDef(sparse_feat_names, embedding_dim=feature_def_settings[FEAT_DEF_RESERVED_GLOBAL]["sparse_embedding_dim"]), batch_format="pandas"
     )
     dense_defs = ds.map_batches(
         DenseFeatureDef(dense_feat_names), batch_format="pandas"
@@ -63,7 +65,7 @@ def load_dataset_builtin(
     }
     feature_defs = {
         k: dense_defs * int(v["dense"]) + sparse_defs * int(v["sparse"])
-        for k, v in feature_def_settings.items()
+        for k, v in feature_def_settings.items() if k != FEAT_DEF_RESERVED_GLOBAL
     }
     torch_dataset_options = {
         "label_column": label_name,

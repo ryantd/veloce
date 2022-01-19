@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from sklearn.metrics import log_loss
+from torchmetrics.functional import auroc
 
 from phetware.util import pprint_results
 from phetware.environ import environ_validate
@@ -42,6 +42,8 @@ class FM(BaseModel):
         self.add_regularization_weight(
             self.fm_embedding_layer.parameters(), l2=l2_reg_fm
         )
+        self.weight = nn.Parameter(torch.Tensor(sum(fc.dimension for fc in self.fds.fm_defs_dense), 1).to(device))
+        torch.nn.init.normal_(self.weight, mean=0, std=init_std)
         self.output = OutputLayer(output_fn=output_fn, output_fn_args=output_fn_args)
         self.to(device)
 
@@ -53,15 +55,23 @@ class FM(BaseModel):
             feature_name_to_index=self.feature_name_to_index,
             embedding_layer_def=self.fm_embedding_layer,
         )
-        fm_input = concat_dnn_inputs(sparse_embs, dense_vals).unsqueeze(dim=1)
-        return self.output(self.fm(fm_input))
+        logit = torch.zeros([X.shape[0], 1]).to(self.device)
+        if len(sparse_embs) > 0:
+            logit = logit.to(sparse_embs[0].device)
+            sparse_emb_cat = torch.cat(sparse_embs, dim=-1)
+            logit += self.fm(sparse_emb_cat)
+        if len(dense_vals) > 0:
+            dense_val_logit = torch.cat(dense_vals, dim=-1).matmul(self.weight)
+            logit += dense_val_logit
+        return self.output(logit)
 
 
 def train_fm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     datasets, feature_defs, torch_dataset_options = load_dataset_builtin(
-        dataset_name="criteo_mini",
+        dataset_name="criteo_10k",
         feature_def_settings={
             "fm": {"dense": True, "sparse": True},
+            "_global": {"sparse_embedding_dim": 10}
         },
     )
 
@@ -75,17 +85,21 @@ def train_fm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         dataset=datasets,
         dataset_options=torch_dataset_options,
         # trainer configs
-        epochs=10,
-        batch_size=32,
+        epochs=20,
+        batch_size=512,
         loss_fn=nn.BCELoss(),
         optimizer=torch.optim.Adam,
-        metric_fns=[log_loss],
+        metric_fns=[auroc],
         num_workers=num_workers,
         use_gpu=use_gpu,
         callbacks=["json", "tbx"],
     )
     results = trainer.run()
     pprint_results(results)
+    """
+    optimizer=Adam
+    valid/BCELoss: 0.55490	valid/auroc: 0.68433
+    """
 
 
 if __name__ == "__main__":
