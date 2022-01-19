@@ -46,12 +46,14 @@ def get_func_name(func):
     return func.__name__
 
 
-def merge_results(validation_result, test_result, time_diff=None):
+def merge_results(validation_result, train_result=None, time_diff=None):
     result = dict()
+    if train_result is None:
+        train_result = dict()
+    for k, v in train_result.items():
+        result[f"train/{k}"] = v
     for k, v in validation_result.items():
         result[f"valid/{k}"] = v
-    for k, v in test_result.items():
-        result[f"test/{k}"] = v
     if time_diff is not None:
         result[TIME_DIFF] = time_diff
     return result
@@ -92,8 +94,8 @@ def pprint_results(run_results, use_style=True, print_interval=1):
                 for k, v in acc_metrics.items()
             ])
             print(
-                f"{s.BOLD}================="
-                f"\nWorker {worker_idx} analysis"
-                f"\n================={s.ENDC}"
+                f"{s.BOLD}======================"
+                f"\nWorker {worker_idx} post-analysis"
+                f"\n======================{s.ENDC}"
                 f"\n[epoch 1 {s.BOLD}→{s.ENDC} {total}]\t{acc_metrics_join}\n"
             )

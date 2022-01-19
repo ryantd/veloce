@@ -64,7 +64,7 @@ def train_lr_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         batch_size=512,
         loss_fn=nn.BCELoss(),
         optimizer=torch.optim.Adam,
-        metric_fns=[auroc, log_loss],
+        metric_fns=[auroc],
         num_workers=num_workers,
         use_gpu=use_gpu,
         callbacks=["json", "tbx"],

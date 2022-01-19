@@ -11,7 +11,6 @@ def load_dataset_builtin(
     dataset_name="criteo_mini",
     feature_def_settings=None,
     valid_split_factor=0.8,
-    test_split_factor=0.9,
     rand_seed=2021,
 ):
     if dataset_name not in BUILTIN_DATASET_FEATS_MAPPING:
@@ -49,21 +48,18 @@ def load_dataset_builtin(
 
     # split dataset
     valid_idx = int(ds.count() * valid_split_factor)
-    test_idx = int(ds.count() * test_split_factor)
-    train_dataset, validation_dataset, test_dataset = ds.random_shuffle(
+    train_dataset, validation_dataset = ds.random_shuffle(
         seed=rand_seed
-    ).split_at_indices([valid_idx, test_idx])
+    ).split_at_indices([valid_idx])
     train_dataset_pipeline = train_dataset.repeat().random_shuffle_each_window(
         seed=rand_seed
     )
     validation_dataset_pipeline = validation_dataset.repeat()
-    test_dataset_pipeline = test_dataset.repeat()
 
     # datasets and defs generating
     datasets = {
         "train": train_dataset_pipeline,
-        "validation": validation_dataset_pipeline,
-        "test": test_dataset_pipeline,
+        "validation": validation_dataset_pipeline
     }
     feature_defs = {
         k: dense_defs * int(v["dense"]) + sparse_defs * int(v["sparse"])

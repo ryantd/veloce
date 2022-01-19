@@ -39,11 +39,6 @@ class BaseTrainFn(object):
             self.validation_dataset_iterator = validation_dataset_shard.iter_datasets()
         except:
             self.validation_dataset_iterator = None
-        try:
-            test_dataset_shard = train.get_dataset_shard("test")
-            self.test_dataset_iterator = test_dataset_shard.iter_datasets()
-        except:
-            self.test_dataset_iterator = None
 
     def setup_model(self, model):
         self.model = model
@@ -62,7 +57,6 @@ class BaseTrainFn(object):
             epochs=self.epochs,
             train_dataset_iter=self.train_dataset_iterator,
             validation_dataset_iter=self.validation_dataset_iterator,
-            test_dataset_iter=self.test_dataset_iterator,
             dataset_options=self.torch_dataset_options,
             batch_size=self.batch_size,
             model=self.model,
