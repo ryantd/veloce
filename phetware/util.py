@@ -95,5 +95,5 @@ def pprint_results(run_results, use_style=True, print_interval=1):
                 f"{s.BOLD}================="
                 f"\nWorker {worker_idx} analysis"
                 f"\n================={s.ENDC}"
-                f"\n[epoch 1→{total}]\t{acc_metrics_join}\n"
+                f"\n[epoch 1 {s.BOLD}→{s.ENDC} {total}]\t{acc_metrics_join}\n"
             )

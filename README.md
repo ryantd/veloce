@@ -46,7 +46,7 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About `phetware`
-__phetware__ is an `instant distributed computing` toolbox based on Ray Stack and ML/DL frameworks, which is flexible, efficient, and ease-of-use. It accelerates the development of any ML/DL training workload, on any cloud or local, at any number of workloads.
+__phetware__ is an `instant distributed computing` toolbox based on Ray Stack and ML/DL frameworks, which is scalable, efficient, and easy-to-use. It accelerates the development of any ML/DL training workload, on any cloud or local, at any number of workloads.
 
 - One-line change to __instantly run__ workloads on any cloud provider or local laptop
 
@@ -67,7 +67,7 @@ pip install -U phetware
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-### `train_fn` manner
+### `nn.Module` manner
 ```shell
 # try `Wide and Deep`
 python -m benchmarks.wdl
@@ -75,16 +75,14 @@ python -m benchmarks.wdl
 python -m benchmarks.deepfm
 # try PNN
 python -m benchmarks.pnn
+# try FNN
+python -m benchmarks.fnn
 ```
 
-### `nn.Module` manner
+### `train_fn` manner
 ```shell
 # try `Wide and Deep`
-python -m benchmarks.wdl_nnt
-# try DeepFM
-python -m benchmarks.deepfm_nnt
-# try PNN
-python -m benchmarks.pnn_nnt
+python -m benchmarks.wdl_raytrain
 ```
 
 <!-- ROADMAP -->
@@ -94,7 +92,7 @@ python -m benchmarks.pnn_nnt
 
 - [x] Wide and Deep
 - [x] DeepFM
-- [ ] FNN
+- [x] FNN
 - [x] PNN
 - [ ] DIN
 - [ ] DIEN
