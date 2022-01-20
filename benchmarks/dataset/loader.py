@@ -6,7 +6,8 @@ from phetware.preprocessing import fillna, MinMaxScaler, LabelEncoder
 from phetware.feature_column import SparseFeatureDef, DenseFeatureDef
 from .mapping import BUILTIN_DATASET_FEATS_MAPPING
 
-FEAT_DEF_RESERVED_GLOBAL = "_global"
+FEAT_DEF_RESERVED_GLOBAL = "_global_settings"
+EMBEDDING_DIM_DEFAULT = 4
 
 
 def load_dataset_builtin(
@@ -39,12 +40,14 @@ def load_dataset_builtin(
     )
 
     # process feature defs
+    try:
+        embedding_dim = feature_def_settings[FEAT_DEF_RESERVED_GLOBAL]["embedding_dim"]
+    except:
+        embedding_dim = EMBEDDING_DIM_DEFAULT
     sparse_defs = ds.map_batches(
         SparseFeatureDef(
             sparse_feat_names,
-            embedding_dim=feature_def_settings[FEAT_DEF_RESERVED_GLOBAL][
-                "sparse_embedding_dim"
-            ],
+            embedding_dim=embedding_dim,
         ),
         batch_format="pandas",
     )

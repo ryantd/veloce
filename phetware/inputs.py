@@ -97,7 +97,7 @@ def build_feature_named_index_mapping(feature_defs):
     return features
 
 
-def concat_dnn_inputs(sparse_embedding_list, dense_value_list):
+def concat_inputs(sparse_embedding_list, dense_value_list):
     if len(sparse_embedding_list) > 0 and len(dense_value_list) > 0:
         sparse_dnn_input = torch.flatten(
             torch.cat(sparse_embedding_list, dim=-1), start_dim=1
@@ -105,7 +105,7 @@ def concat_dnn_inputs(sparse_embedding_list, dense_value_list):
         dense_dnn_input = torch.flatten(
             torch.cat(dense_value_list, dim=-1), start_dim=1
         )
-        return concat_inputs([sparse_dnn_input, dense_dnn_input])
+        return concatenate([sparse_dnn_input, dense_dnn_input])
     elif len(sparse_embedding_list) > 0:
         return torch.flatten(torch.cat(sparse_embedding_list, dim=-1), start_dim=1)
     elif len(dense_value_list) > 0:
@@ -190,7 +190,7 @@ def collect_inputs_and_embeddings(
     return sparse_embeddings
 
 
-def concat_inputs(inputs, axis=-1):
+def concatenate(inputs, axis=-1):
     if len(inputs) == 1:
         return inputs[0]
     else:

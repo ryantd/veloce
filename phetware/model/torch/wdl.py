@@ -3,7 +3,7 @@ import torch
 
 from phetware.layer import DNN, OutputLayer
 from phetware.inputs import (
-    concat_dnn_inputs,
+    concat_inputs,
     compute_inputs_dim,
     embedding_dict_gen,
     collect_inputs_and_embeddings,
@@ -101,7 +101,7 @@ class WideAndDeep(BaseModel):
                 feature_name_to_index=self.feature_name_to_index,
                 embedding_layer_def=self.dnn_embedding_layer,
             )
-            dnn_input = concat_dnn_inputs(sparse_embeddings, dense_values)
+            dnn_input = concat_inputs(sparse_embeddings, dense_values)
             dnn_output = self.deep_model(dnn_input)
             dnn_logit = self.final_linear(dnn_output)
             logit += dnn_logit

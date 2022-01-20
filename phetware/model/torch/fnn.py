@@ -3,7 +3,7 @@ import torch
 
 from phetware.layer import DNN, OutputLayer, FM
 from phetware.inputs import (
-    concat_dnn_inputs,
+    concat_inputs,
     compute_inputs_dim,
     embedding_dict_gen,
     collect_inputs_and_embeddings,
@@ -96,7 +96,7 @@ class FNN(BaseModel):
             fm_input = torch.cat(dnn_sparse_embs, dim=1)
             logit = self.fm(fm_input)
         elif self.use_dnn:
-            dnn_input = concat_dnn_inputs(dnn_sparse_embs, dnn_dense_vals)
+            dnn_input = concat_inputs(dnn_sparse_embs, dnn_dense_vals)
             dnn_output = self.dnn(dnn_input)
             logit = self.final_linear(dnn_output)
         y = self.output(logit)

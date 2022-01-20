@@ -22,6 +22,7 @@ class BaseTrainFn(object):
         self.batch_size = config.get("batch_size", 256)
         self.loss_fn = config.get("loss_fn", nn.BCELoss())
         self.optimizer = config.get("optimizer", torch.optim.Adam)
+        self.optimizer_args = config.get("optimizer_args", dict())
         self.metric_fns = config.get("metric_fns", [torchmetrics.AUROC()])
         self.output_fn = config.get("output_fn", torch.sigmoid)
         self.output_fn_args = config.get("output_fn_args", None)
@@ -46,7 +47,7 @@ class BaseTrainFn(object):
             get_package_name(self.optimizer) == "phetware"
             and type(self.optimizer).__name__ != "OptimizerStack"
         ):
-            self.optimizer = self.optimizer(model.parameters())
+            self.optimizer = self.optimizer(model.parameters(), **self.optimizer_args)
         elif type(self.optimizer).__name__ == "OptimizerStack":
             self.optimizer.compile(self.model.module)
         else:

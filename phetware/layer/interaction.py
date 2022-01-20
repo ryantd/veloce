@@ -14,6 +14,27 @@ class FM(nn.Module):
         return cross_term
 
 
+class FMNative(nn.Module):
+    def __init__(self, feature_def_dims, k_factor, dropout, init_std=0.0001):
+        super(FMNative, self).__init__()
+        self.n = feature_def_dims
+        self.k = k_factor
+        self.linear = nn.Linear(self.n, 1, bias=True)
+        self.v = nn.Parameter(torch.rand(self.n, self.k))
+        torch.nn.init.normal_(self.v, mean=0, std=init_std)
+        self.dropout = nn.Dropout(dropout)
+
+    def forward(self, inputs):
+        fm_first = self.linear(inputs)
+        fm_second_part1 = torch.pow(torch.matmul(inputs, self.v), 2)
+        fm_second_part2 = torch.matmul(torch.pow(inputs, 2), torch.pow(self.v, 2))
+        fm_second = 0.5 * torch.sum(
+            fm_second_part1 - fm_second_part2, dim=1, keepdim=True
+        )
+        fm_second = self.dropout(fm_second)
+        return fm_first + fm_second
+
+
 class InnerProduct(nn.Module):
     def __init__(self, reduce_sum=True, device="cpu"):
         super(InnerProduct, self).__init__()

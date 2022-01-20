@@ -140,7 +140,7 @@ class Epochvisor(object):
             X = X.to(self.device)
             y = y.to(self.device)
             pred = self.model(X)
-            loss = self.loss_fn(pred, y)
+            loss = self.loss_fn(pred, y) + self.model.module.get_regularization_loss()
             self.optimizer.zero_grad()
             loss.backward()
             self.optimizer.step()

@@ -15,7 +15,7 @@ class LR(BaseModel):
     def __init__(
         self,
         linear_feature_defs=None,
-        l2_reg_linear=1e-5,
+        l2_reg_linear=1e-3,
         seed=1024,
         device="cpu",
         output_fn=torch.sigmoid,
@@ -72,11 +72,8 @@ def train_lr_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     results = trainer.run()
     pprint_results(results)
     """
-    optimizer=Adam
-    valid/BCELoss: 0.49980	valid/auroc: 0.73877
-
     optimizer=FTRL
-    valid/BCELoss: 0.51735	valid/auroc: 0.71106
+    valid/BCELoss: 0.51007	valid/auroc: 0.73293
     """
 
 

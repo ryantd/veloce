@@ -34,7 +34,23 @@ class BaseModel(nn.Module):
         else:
             weight_list = list(weight_list)
         self.regularization_weight.append((weight_list, l1, l2))
-        return self.regularization_weight
+
+    def get_regularization_loss(self):
+        total_reg_loss = torch.zeros((1,), device=self.device)
+        for weight_list, l1, l2 in self.regularization_weight:
+            for w in weight_list:
+                if isinstance(w, tuple):
+                    parameter = w[1]
+                else:
+                    parameter = w
+                if l1 > 0:
+                    total_reg_loss += torch.sum(l1 * torch.abs(parameter))
+                if l2 > 0:
+                    try:
+                        total_reg_loss += torch.sum(l2 * torch.square(parameter))
+                    except AttributeError:
+                        total_reg_loss += torch.sum(l2 * parameter * parameter)
+        return total_reg_loss
 
 
 class Linear(nn.Module):

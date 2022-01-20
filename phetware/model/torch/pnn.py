@@ -3,11 +3,11 @@ import torch
 
 from phetware.layer import DNN, OutputLayer, InnerProduct, OutterProduct
 from phetware.inputs import (
-    concat_dnn_inputs,
+    concat_inputs,
     compute_inputs_dim,
     embedding_dict_gen,
     collect_inputs_and_embeddings,
-    concat_inputs,
+    concatenate,
 )
 from .base import BaseModel
 
@@ -115,7 +115,7 @@ class PNN(BaseModel):
             embedding_layer_def=self.dnn_embedding_layer,
         )
 
-        linear_signal = torch.flatten(concat_inputs(dnn_sparse_embs), start_dim=1)
+        linear_signal = torch.flatten(concatenate(dnn_sparse_embs), start_dim=1)
         if self.use_inner:
             inner_product = torch.flatten(
                 self.inner_product(dnn_sparse_embs), start_dim=1
@@ -136,7 +136,7 @@ class PNN(BaseModel):
 
         # dnn
         if self.use_dnn:
-            dnn_input = concat_dnn_inputs([product_layer], dnn_dense_vals)
+            dnn_input = concat_inputs([product_layer], dnn_dense_vals)
             dnn_output = self.dnn(dnn_input)
             dnn_logit = self.final_linear(dnn_output)
             logit = dnn_logit
