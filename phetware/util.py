@@ -87,12 +87,14 @@ def pprint_results(run_results, use_style=True, print_interval=1):
                 print(
                     f"[epoch {idx + 1}/{total}: {'%.3f' % time_diff}s]\t{metrics_join}"
                 )
-            acc_metrics_join = "\t".join([
-                f"{k}: {s.BOLDGREEN}↓ {s.ENDC}{'%.3f' % (v*100)}%"
-                if v > 0
-                else f"{k}: {s.BOLDRED}↑ {s.ENDC}{'%.3f' % -(v*100)}%"
-                for k, v in acc_metrics.items()
-            ])
+            acc_metrics_join = "\t".join(
+                [
+                    f"{k}: {s.BOLDGREEN}↓ {s.ENDC}{'%.3f' % (v*100)}%"
+                    if v > 0
+                    else f"{k}: {s.BOLDRED}↑ {s.ENDC}{'%.3f' % -(v*100)}%"
+                    for k, v in acc_metrics.items()
+                ]
+            )
             print(
                 f"{s.BOLD}======================"
                 f"\nWorker {worker_idx} post-analysis"

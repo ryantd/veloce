@@ -15,5 +15,5 @@ setup(
     long_description_content_type="text/markdown",
     url="http://prophet.qihoo.net/",
     packages=find_packages(),
-    package_dir={"phetware": "phetware"}
+    package_dir={"phetware": "phetware"},
 )

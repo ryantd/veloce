@@ -19,4 +19,5 @@ criteo_10k_feat = dict(
 
 BUILTIN_DATASET_FEATS_MAPPING = {
     "criteo_mini": criteo_mini_feat,
-    "criteo_10k": criteo_10k_feat}
+    "criteo_10k": criteo_10k_feat,
+}

@@ -42,7 +42,11 @@ class FM(BaseModel):
         self.add_regularization_weight(
             self.fm_embedding_layer.parameters(), l2=l2_reg_fm
         )
-        self.weight = nn.Parameter(torch.Tensor(sum(fc.dimension for fc in self.fds.fm_defs_dense), 1).to(device))
+        self.weight = nn.Parameter(
+            torch.Tensor(sum(fc.dimension for fc in self.fds.fm_defs_dense), 1).to(
+                device
+            )
+        )
         torch.nn.init.normal_(self.weight, mean=0, std=init_std)
         self.output = OutputLayer(output_fn=output_fn, output_fn_args=output_fn_args)
         self.to(device)
@@ -71,7 +75,7 @@ def train_fm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         dataset_name="criteo_10k",
         feature_def_settings={
             "fm": {"dense": True, "sparse": True},
-            "_global": {"sparse_embedding_dim": 10}
+            "_global": {"sparse_embedding_dim": 10},
         },
     )
 

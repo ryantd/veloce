@@ -25,12 +25,11 @@ class LossMetricAccumulator(object):
                 self.torchm_intermediates[get_func_name(fn)] += r
             elif get_package_name(fn) == "sklearn":
                 self.sklearn_intermediates[get_func_name(fn)] += fn(
-                    y.cpu().data.numpy(), pred.cpu().data.numpy())
+                    y.cpu().data.numpy(), pred.cpu().data.numpy()
+                )
 
     def result_gen(self, num_batches):
-        results = {
-            get_type(self.loss_fn): self.loss/num_batches
-        }
+        results = {get_type(self.loss_fn): self.loss / num_batches}
         # torchmetrics module compute and reset
         for fn in self.metric_fns:
             if get_package_name(fn) == "torchmetrics" and get_type(fn) != "function":
@@ -136,8 +135,7 @@ class Epochvisor(object):
     def train_epoch(self, train_iterable_ds):
         self.model.train()
         num_batches = 0
-        lma = LossMetricAccumulator(
-            loss_fn=self.loss_fn, metric_fns=self.metric_fns)
+        lma = LossMetricAccumulator(loss_fn=self.loss_fn, metric_fns=self.metric_fns)
         for _, (X, y) in enumerate(train_iterable_ds):
             X = X.to(self.device)
             y = y.to(self.device)
@@ -154,8 +152,7 @@ class Epochvisor(object):
     def validate_epoch(self, validation_iterable_ds):
         self.model.eval()
         num_batches = 0
-        lma = LossMetricAccumulator(
-            loss_fn=self.loss_fn, metric_fns=self.metric_fns)
+        lma = LossMetricAccumulator(loss_fn=self.loss_fn, metric_fns=self.metric_fns)
         with torch.no_grad():
             for _, (X, y) in enumerate(validation_iterable_ds):
                 X = X.to(self.device)
