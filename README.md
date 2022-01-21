@@ -64,6 +64,62 @@ __phetware__ is an `instant distributed computing` toolbox based on Ray Stack an
 pip install -U phetware
 ```
 
+### Feature
+
+#### Optimizer Stack
+```python
+from phetware.optimizer import OptimizerStack
+
+trainer = NeuralNetTrainer(
+  ...,
+  optimizer=OptimizerStack(
+    # support multiple optimizers
+    dict(cls=torch.optim.Adagrad, model_key="deep_model"),
+    dict(
+        cls=FTRL,
+        args=dict(alpha=1.0, beta=1.0, l1=1.0, l2=1.0),
+        model_key="wide_model",
+    ),
+  ),
+)
+```
+#### Loss Function Stack
+```python
+from phetware.loss_fn import LossFnStack
+
+trainer = NeuralNetTrainer(
+  ...,
+  loss_fn=LossFnStack(
+      # support multiple loss functions with fixed weight
+      dict(fn=nn.BCELoss(), weight=0.2),
+      dict(fn=nn.HingeEmbeddingLoss(), weight=0.8),
+  ),
+)
+```
+
+#### Early Stopping
+```python
+trainer = NeuralNetTrainer(
+  ...,
+  use_early_stopping=True,
+  early_stopping_args={"patience": 2},
+)
+```
+
+#### Pre-training Model
+```python
+trainer = NeuralNetTrainer(
+  ...,
+  module=FNN,
+  module_params={"pre_trained_mode": True}
+)
+
+trainer.run(multi_runs=[
+  {"epochs": 10},
+  {"epochs": 10, "module_params": {"pre_trained_mode": False}},
+])
+```
+
 <!-- USAGE EXAMPLES -->
 ## Usage
 

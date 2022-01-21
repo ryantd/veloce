@@ -7,6 +7,7 @@ class StyleCoder(object):
     HEADER = "\033[95m"
     BLUE = "\033[94m"
     CYAN = "\033[96m"
+    BOLDCYAN = "\033[1;96m"
     GREEN = "\033[92m"
     BOLDGREEN = "\033[1;92m"
     WARNING = "\033[93m"
@@ -61,8 +62,10 @@ def merge_results(validation_result, train_result=None, time_diff=None):
 
 def pprint_results(run_results, use_style=True, print_interval=1):
     s = StyleCoder(use_style)
+    previous_total = 0
     for run_idx, worker_results in enumerate(run_results):
         print(f"\n{s.BOLD}Run {run_idx}: {s.ENDC}")
+        total = 0
         for worker_idx, results in enumerate(worker_results):
             if not len(results):
                 continue
@@ -95,9 +98,12 @@ def pprint_results(run_results, use_style=True, print_interval=1):
                     for k, v in acc_metrics.items()
                 ]
             )
+            es_indicator = " ES" if previous_total > total else ""
             print(
                 f"{s.BOLD}======================"
                 f"\nWorker {worker_idx} post-analysis"
                 f"\n======================{s.ENDC}"
-                f"\n[epoch 1 {s.BOLD}→{s.ENDC} {total}]\t{acc_metrics_join}\n"
+                f"\n[epoch 1 {s.BOLD}→{s.ENDC} {total}{s.BOLDCYAN}"
+                f"{es_indicator}{s.ENDC}]\t{acc_metrics_join}\n"
             )
+        previous_total = total

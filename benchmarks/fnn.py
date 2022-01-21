@@ -44,7 +44,7 @@ def train_fnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     results = trainer.run(
         multi_runs=[
             {"epochs": 10},
-            {"epochs": 10, "module_params": {"pre_trained_mode": False}}
+            {"epochs": 10, "module_params": {"pre_trained_mode": False}},
         ]
     )
     pprint_results(results)

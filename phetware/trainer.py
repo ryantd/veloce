@@ -27,6 +27,8 @@ class NeuralNetTrainer(object):
         optimizer_args=None,
         ddp_options=None,
         callbacks=None,
+        use_early_stopping=False,
+        early_stopping_args=None,
     ):
         self.model = module
         self.module_params = module_params
@@ -41,6 +43,8 @@ class NeuralNetTrainer(object):
         self.optimizer_args = optimizer_args or {}
         self.metric_fns = metric_fns
         self.use_static_graph = use_static_graph
+        self.use_early_stopping = use_early_stopping
+        self.early_stopping_args = early_stopping_args
 
         self.callbacks = callbacks
         self.num_workers = num_workers
@@ -75,6 +79,8 @@ class NeuralNetTrainer(object):
                 ddp_options=self.ddp_options,
                 torch_dataset_options=self.dataset_options,
                 use_static_graph=self.use_static_graph,
+                use_early_stopping=self.use_early_stopping,
+                early_stopping_args=self.early_stopping_args,
                 **self.module_params
             )
             try:

@@ -32,6 +32,8 @@ class BaseTrainFn(object):
         self.use_static_graph = config.get("use_static_graph", False)
         self.checkpoint = train.load_checkpoint() or None
         self.device = train.torch.get_device()
+        self.use_early_stopping = config.get("use_early_stopping", False)
+        self.early_stopping_args = config.get("early_stopping_args", None) or {}
 
         # dataset setup
         train_dataset_shard = train.get_dataset_shard("train")
@@ -72,6 +74,8 @@ class BaseTrainFn(object):
             metric_fns=self.metric_fns,
             device=self.device,
             checkpoint=self.checkpoint,
+            use_early_stopping=self.use_early_stopping,
+            early_stopping_args=self.early_stopping_args,
         )
 
     def run_epochs(self):

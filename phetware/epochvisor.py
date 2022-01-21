@@ -28,7 +28,7 @@ class LossMetricAccumulator(object):
                     y.cpu().data.numpy(), pred.cpu().data.numpy()
                 )
 
-    def result_gen(self, num_batches):
+    def result_gen(self, num_batches, with_latest_loss=False):
         results = {get_type(self.loss_fn): self.loss / num_batches}
         # torchmetrics module compute and reset
         for fn in self.metric_fns:
@@ -43,6 +43,9 @@ class LossMetricAccumulator(object):
             self.sklearn_intermediates[name] /= num_batches
         results.update(self.torchm_intermediates)
         results.update(self.sklearn_intermediates)
+
+        if with_latest_loss:
+            return results, self.loss / num_batches
         return results
 
 
@@ -61,6 +64,8 @@ class Epochvisor(object):
         checkpoint=None,
         metric_fns=None,
         validation_dataset_iter=None,
+        use_early_stopping=False,
+        early_stopping_args=None,
     ):
         self.epochs = epochs
         self.train_dataset_iter = train_dataset_iter
@@ -73,6 +78,8 @@ class Epochvisor(object):
         self.metric_fns = metric_fns
         self.device = device
         self.checkpoint = checkpoint
+        self.use_early_stopping = use_early_stopping
+        self.early_stopping_args = early_stopping_args or {"patience": 2}
 
         if not self.metric_fns:
             raise ValueError("metric_fns must be given")
@@ -83,6 +90,9 @@ class Epochvisor(object):
         label_column_dtype = self.dataset_options["label_column_dtype"]
         feature_column_dtypes = self.dataset_options["feature_column_dtypes"]
         start_epoch = 0
+        previous_epoch_loss = 1
+        es_trigger_times = 0
+        results = []
 
         if self.checkpoint:
             model_state_dict = self.checkpoint.get("model_state_dict", None)
@@ -92,7 +102,6 @@ class Epochvisor(object):
             self.model.load_state_dict(model_state_dict)
             self.optimizer.load_state_dict(optimizer_state_dict)
 
-        results = []
         for epoch_id in range(start_epoch, self.epochs):
             start_ts = time.time()
 
@@ -115,7 +124,9 @@ class Epochvisor(object):
                     feature_column_dtypes=feature_column_dtypes,
                     batch_size=self.batch_size,
                 )
-                validation_result = self.validate_epoch(validation_torch_dataset)
+                validation_result, latest_epoch_loss = self.validate_epoch(
+                    validation_torch_dataset, with_latest_loss=True
+                )
 
             train.save_checkpoint(
                 epoch_id=epoch_id,
@@ -130,6 +141,16 @@ class Epochvisor(object):
             )
             train.report(**result)
             results.append(result)
+
+            # early stopping
+            if self.use_early_stopping:
+                if latest_epoch_loss > previous_epoch_loss:
+                    es_trigger_times += 1
+                    if es_trigger_times >= self.early_stopping_args["patience"]:
+                        break
+                else:
+                    es_trigger_times = 0
+            previous_epoch_loss = latest_epoch_loss
         return results
 
     def train_epoch(self, train_iterable_ds):
@@ -149,7 +170,7 @@ class Epochvisor(object):
             lma.acc(pred=pred, y=y)
         return lma.result_gen(num_batches=num_batches)
 
-    def validate_epoch(self, validation_iterable_ds):
+    def validate_epoch(self, validation_iterable_ds, with_latest_loss=False):
         self.model.eval()
         num_batches = 0
         lma = LossMetricAccumulator(loss_fn=self.loss_fn, metric_fns=self.metric_fns)
@@ -161,4 +182,6 @@ class Epochvisor(object):
                 # metrics part
                 num_batches += 1
                 lma.acc(pred=pred, y=y)
-        return lma.result_gen(num_batches=num_batches)
+        return lma.result_gen(
+            num_batches=num_batches, with_latest_loss=with_latest_loss
+        )
