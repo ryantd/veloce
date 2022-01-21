@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
 
-from phetware.layer import DNN, OutputLayer, FM
+from phetware.layer import DNN, OutputLayer, FMNative
 from phetware.inputs import (
     concat_inputs,
     compute_inputs_dim,
@@ -18,19 +18,22 @@ class FNN(BaseModel):
         dnn_feature_defs=None,
         # fm related
         pre_trained_mode=False,
+        k_factor=10,
+        fm_dropout=0,
+        l2_reg_fm=1e-3,
         # dnn related
         dnn_hidden_units=(256, 128),
         dnn_use_bn=False,
         dnn_activation="relu",
-        l2_reg_embedding=1e-5,
-        l2_reg_dnn=0,
+        l2_reg_embedding=1e-3,
+        l2_reg_dnn=1e-3,
         dnn_dropout=0,
         # base config
         seed=1024,
         output_fn=torch.sigmoid,
         output_fn_args=None,
         device="cpu",
-        init_std=0.0001,
+        init_std=1e-4,
         **kwargs
     ):
         super(FNN, self).__init__(
@@ -42,7 +45,14 @@ class FNN(BaseModel):
         self.pre_trained_mode = pre_trained_mode
 
         # fm layers setup
-        self.fm = FM()
+        self.fm = FMNative(
+            feature_def_dims=sum(fc.dimension for fc in self.fds.dnn_defs_dense)
+            + sum(fc.embedding_dim for fc in self.fds.dnn_defs_sparse),
+            k_factor=k_factor,
+            dropout_rate=fm_dropout,
+            init_std=init_std,
+        )
+        self.add_regularization_weight(self.fm.parameters(), l2=l2_reg_fm)
 
         # dnn layer setup
         if self.use_dnn:
@@ -53,7 +63,6 @@ class FNN(BaseModel):
             self.add_regularization_weight(
                 self.dnn_embedding_layer.parameters(), l2=l2_reg_embedding
             )
-
             self.dnn = DNN(
                 compute_inputs_dim(
                     sparse_feature_defs=self.fds.dnn_defs_sparse,
@@ -70,7 +79,6 @@ class FNN(BaseModel):
             self.final_linear = nn.Linear(dnn_hidden_units[-1], 1, bias=False).to(
                 device
             )
-
             self.add_regularization_weight(
                 filter(
                     lambda x: "weight" in x[0] and "bn" not in x[0],
@@ -93,11 +101,9 @@ class FNN(BaseModel):
             embedding_layer_def=self.dnn_embedding_layer,
         )
         if self.pre_trained_mode:
-            fm_input = torch.cat(dnn_sparse_embs, dim=1)
-            logit = self.fm(fm_input)
+            logit = self.fm(concat_inputs(dnn_sparse_embs, dnn_dense_vals))
         elif self.use_dnn:
-            dnn_input = concat_inputs(dnn_sparse_embs, dnn_dense_vals)
-            dnn_output = self.dnn(dnn_input)
-            logit = self.final_linear(dnn_output)
+            output = self.dnn(concat_inputs(dnn_sparse_embs, dnn_dense_vals))
+            logit = self.final_linear(output)
         y = self.output(logit)
         return y

@@ -45,7 +45,7 @@ class FM(BaseModel):
             feature_def_dims=sum(fc.dimension for fc in self.fds.fm_defs_dense)
             + sum(fc.embedding_dim for fc in self.fds.fm_defs_sparse),
             k_factor=k_factor,
-            dropout=fm_dropout,
+            dropout_rate=fm_dropout,
             init_std=init_std,
         )
         self.add_regularization_weight(
@@ -81,7 +81,6 @@ def train_fm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         module_params={
             "fm_feature_defs": feature_defs["fm"],
             "seed": rand_seed,
-            "k_factor": 10,
         },
         dataset=datasets,
         dataset_options=torch_dataset_options,

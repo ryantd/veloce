@@ -15,14 +15,14 @@ class FM(nn.Module):
 
 
 class FMNative(nn.Module):
-    def __init__(self, feature_def_dims, k_factor, dropout, init_std=0.0001):
+    def __init__(self, feature_def_dims, k_factor, dropout_rate, init_std=0.0001):
         super(FMNative, self).__init__()
         self.n = feature_def_dims
         self.k = k_factor
         self.linear = nn.Linear(self.n, 1, bias=True)
         self.v = nn.Parameter(torch.rand(self.n, self.k))
         torch.nn.init.normal_(self.v, mean=0, std=init_std)
-        self.dropout = nn.Dropout(dropout)
+        self.dropout = nn.Dropout(dropout_rate)
 
     def forward(self, inputs):
         fm_first = self.linear(inputs)

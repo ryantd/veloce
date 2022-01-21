@@ -22,13 +22,14 @@ class BaseTrainFn(object):
         self.batch_size = config.get("batch_size", 256)
         self.loss_fn = config.get("loss_fn", nn.BCELoss())
         self.optimizer = config.get("optimizer", torch.optim.Adam)
-        self.optimizer_args = config.get("optimizer_args", dict())
+        self.optimizer_args = config.get("optimizer_args", None) or {}
         self.metric_fns = config.get("metric_fns", [torchmetrics.AUROC()])
         self.output_fn = config.get("output_fn", torch.sigmoid)
         self.output_fn_args = config.get("output_fn_args", None)
         self.summary_nn_arch = config.get("summary_nn_arch", False)
         self.init_std = config.get("init_std", 0.0001)
-        self.ddp_options = config.get("ddp_options", None)
+        self.ddp_options = config.get("ddp_options", None) or {}
+        self.use_static_graph = config.get("use_static_graph", False)
         self.checkpoint = train.load_checkpoint() or None
         self.device = train.torch.get_device()
 
@@ -43,6 +44,8 @@ class BaseTrainFn(object):
 
     def setup_model(self, model):
         self.model = model
+        if self.use_static_graph:
+            self.model._set_static_graph()
         if get_package_name(self.optimizer) == "torch" or (
             get_package_name(self.optimizer) == "phetware"
             and type(self.optimizer).__name__ != "OptimizerStack"
@@ -87,8 +90,6 @@ class Generic(BaseTrainFn):
                 config[k] = reformat_input_features(v)
             else:
                 config[k] = v
-        if self.ddp_options is None:
-            self.ddp_options = {}
         model = train.torch.prepare_model(
             model=self.model(**config), ddp_kwargs=self.ddp_options
         )
