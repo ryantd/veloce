@@ -1,7 +1,9 @@
 import time
 from collections import defaultdict
+from tkinter.tix import Tree
 
 import torch
+from torch.distributed.algorithms.join import Join
 import ray.train as train
 
 from .util import get_package_name, merge_results, get_type, get_func_name
@@ -102,55 +104,59 @@ class Epochvisor(object):
             self.model.load_state_dict(model_state_dict)
             self.optimizer.load_state_dict(optimizer_state_dict)
 
-        for epoch_id in range(start_epoch, self.epochs):
-            start_ts = time.time()
+        with self.model.join(
+            divide_by_initial_world_size=False,
+            throw_on_early_termination=True,
+        ):
+            for epoch_id in range(start_epoch, self.epochs):
+                start_ts = time.time()
 
-            train_dataset = next(self.train_dataset_iter)
-            train_torch_dataset = train_dataset.to_torch(
-                label_column=label_column,
-                feature_columns=feature_columns,
-                label_column_dtype=label_column_dtype,
-                feature_column_dtypes=feature_column_dtypes,
-                batch_size=self.batch_size,
-            )
-            train_result = self.train_epoch(train_torch_dataset)
-
-            if self.validation_dataset_iter:
-                validation_dataset = next(self.validation_dataset_iter)
-                validation_torch_dataset = validation_dataset.to_torch(
+                train_dataset = next(self.train_dataset_iter)
+                train_torch_dataset = train_dataset.to_torch(
                     label_column=label_column,
                     feature_columns=feature_columns,
                     label_column_dtype=label_column_dtype,
                     feature_column_dtypes=feature_column_dtypes,
                     batch_size=self.batch_size,
                 )
-                validation_result, latest_epoch_loss = self.validate_epoch(
-                    validation_torch_dataset, with_latest_loss=True
+                train_result = self.train_epoch(train_torch_dataset)
+
+                if self.validation_dataset_iter:
+                    validation_dataset = next(self.validation_dataset_iter)
+                    validation_torch_dataset = validation_dataset.to_torch(
+                        label_column=label_column,
+                        feature_columns=feature_columns,
+                        label_column_dtype=label_column_dtype,
+                        feature_column_dtypes=feature_column_dtypes,
+                        batch_size=self.batch_size,
+                    )
+                    validation_result, latest_epoch_loss = self.validate_epoch(
+                        validation_torch_dataset, with_latest_loss=True
+                    )
+
+                train.save_checkpoint(
+                    epoch_id=epoch_id,
+                    model_state_dict=self.model.state_dict(),
+                    optimizer_state_dict=self.optimizer.state_dict(),
                 )
+                end_ts = time.time()
+                result = merge_results(
+                    validation_result=validation_result,
+                    train_result=train_result,
+                    time_diff=end_ts - start_ts,
+                )
+                train.report(**result)
+                results.append(result)
 
-            train.save_checkpoint(
-                epoch_id=epoch_id,
-                model_state_dict=self.model.state_dict(),
-                optimizer_state_dict=self.optimizer.state_dict(),
-            )
-            end_ts = time.time()
-            result = merge_results(
-                validation_result=validation_result,
-                train_result=train_result,
-                time_diff=end_ts - start_ts,
-            )
-            train.report(**result)
-            results.append(result)
-
-            # early stopping
-            if self.use_early_stopping:
-                if latest_epoch_loss > previous_epoch_loss:
-                    es_trigger_times += 1
-                    if es_trigger_times >= self.early_stopping_args["patience"]:
-                        break
-                else:
-                    es_trigger_times = 0
-            previous_epoch_loss = latest_epoch_loss
+                # early stopping
+                if self.use_early_stopping:
+                    if latest_epoch_loss > previous_epoch_loss:
+                        es_trigger_times += 1
+                        if es_trigger_times >= self.early_stopping_args["patience"]:
+                            break
+                    else:
+                        es_trigger_times = 0
+                previous_epoch_loss = latest_epoch_loss
         return results
 
     def train_epoch(self, train_iterable_ds):
