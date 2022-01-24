@@ -55,7 +55,7 @@ class NeuralNetTrainer(object):
         else:
             self.callbacks = []
 
-    def run(self, multi_runs=None, runs_mode="sync", use_checkpoint=True):
+    def run(self, multi_runs=None, runs_mode="sync", use_checkpoint=False):
         if runs_mode != "sync":
             raise ValueError("Arg run_mode not support non-sync")
 
@@ -63,6 +63,7 @@ class NeuralNetTrainer(object):
             self.multi_runs = [DefaultRun]
         else:
             self.multi_runs = multi_runs
+            use_checkpoint = True
         results = []
         latest_ckpt = None
 
@@ -101,6 +102,6 @@ class NeuralNetTrainer(object):
             )
             if use_checkpoint:
                 latest_ckpt = trainer.latest_checkpoint
-                latest_ckpt["epoch_id"] = 0
+                if latest_ckpt: latest_ckpt["epoch_id"] = 0
         trainer.shutdown()
         return results
