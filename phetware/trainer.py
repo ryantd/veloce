@@ -4,6 +4,7 @@ from ray.train import Trainer
 from ray.train.callbacks import JsonLoggerCallback, TBXLoggerCallback
 
 from phetware.train_fn import Generic
+from phetware.callback import EarlyStoppingCallback
 
 callback_mapping = {"json": JsonLoggerCallback, "tbx": TBXLoggerCallback}
 DefaultRun = {}
@@ -91,17 +92,37 @@ class NeuralNetTrainer(object):
             run_configs.update(addons)
             run_configs.update(addons_module_params)
 
-            results.append(
-                trainer.run(
-                    train_func=Generic(self.model),
-                    dataset=self.dataset,
-                    callbacks=self.callbacks,
-                    config=run_configs,
-                    checkpoint=latest_ckpt,
+            if not self.use_early_stopping:
+                results.append(
+                    trainer.run(
+                        train_func=Generic(self.model),
+                        dataset=self.dataset,
+                        callbacks=self.callbacks,
+                        config=run_configs,
+                        checkpoint=latest_ckpt,
+                    )
                 )
-            )
-            if use_checkpoint:
-                latest_ckpt = trainer.latest_checkpoint
-                if latest_ckpt: latest_ckpt["epoch_id"] = 0
-        trainer.shutdown()
+                if use_checkpoint:
+                    latest_ckpt = trainer.latest_checkpoint
+                    if latest_ckpt: latest_ckpt["epoch_id"] = 0
+                trainer.shutdown()
+            else:
+                if len(self.multi_runs) > 1:
+                    print("warning: early_stopping not support multiple runs")
+                    self.multi_runs = [self.multi_runs[0]]
+                # hacky solution on EarlyStopping
+                es = EarlyStoppingCallback(trainer)
+                self.callbacks.append(es)
+                try:
+                    trainer.run(
+                        train_func=Generic(self.model),
+                        dataset=self.dataset,
+                        callbacks=self.callbacks,
+                        config=run_configs,
+                        checkpoint=latest_ckpt,
+                    )
+                except:
+                    pass
+                results = [es.stored_results]
+
         return results

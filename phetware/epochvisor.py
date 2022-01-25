@@ -92,9 +92,12 @@ class Epochvisor(object):
         label_column_dtype = self.dataset_options["label_column_dtype"]
         feature_column_dtypes = self.dataset_options["feature_column_dtypes"]
         start_epoch = 0
+        results = []
+
+        # early stopping related
         previous_epoch_loss = 1
         es_trigger_times = 0
-        results = []
+        is_early_stopped = False
 
         if self.checkpoint:
             model_state_dict = self.checkpoint.get("model_state_dict", None)
@@ -110,7 +113,6 @@ class Epochvisor(object):
         ):
             for epoch_id in range(start_epoch, self.epochs):
                 start_ts = time.time()
-
                 train_dataset = next(self.train_dataset_iter)
                 train_torch_dataset = train_dataset.to_torch(
                     label_column=label_column,
@@ -120,7 +122,6 @@ class Epochvisor(object):
                     batch_size=self.batch_size,
                 )
                 train_result = self.train_epoch(train_torch_dataset)
-
                 if self.validation_dataset_iter:
                     validation_dataset = next(self.validation_dataset_iter)
                     validation_torch_dataset = validation_dataset.to_torch(
@@ -133,29 +134,31 @@ class Epochvisor(object):
                     validation_result, latest_epoch_loss = self.validate_epoch(
                         validation_torch_dataset, with_latest_loss=True
                     )
+                end_ts = time.time()
 
+                # early stopping check
+                if self.use_early_stopping:
+                    if latest_epoch_loss > previous_epoch_loss:
+                        es_trigger_times += 1
+                        if es_trigger_times >= self.early_stopping_args["patience"]:
+                            is_early_stopped = True
+                    else:
+                        es_trigger_times = 0
+
+                # post epoch operations
+                result = merge_results(
+                    validation_result=validation_result,
+                    train_result=train_result,
+                    time_diff=end_ts - start_ts,
+                    is_early_stopped=is_early_stopped,
+                )
                 train.save_checkpoint(
                     epoch_id=epoch_id,
                     model_state_dict=self.model.state_dict(),
                     optimizer_state_dict=self.optimizer.state_dict(),
                 )
-                end_ts = time.time()
-                result = merge_results(
-                    validation_result=validation_result,
-                    train_result=train_result,
-                    time_diff=end_ts - start_ts,
-                )
                 train.report(**result)
                 results.append(result)
-
-                # early stopping
-                if self.use_early_stopping:
-                    if latest_epoch_loss > previous_epoch_loss:
-                        es_trigger_times += 1
-                        if es_trigger_times >= self.early_stopping_args["patience"]:
-                            break
-                    else:
-                        es_trigger_times = 0
                 previous_epoch_loss = latest_epoch_loss
         return results
 

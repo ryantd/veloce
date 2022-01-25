@@ -1,6 +1,7 @@
 import inspect
 
 TIME_DIFF = "epoch_seconds"
+EARLY_STOPPED = "is_early_stopped"
 
 
 class StyleCoder(object):
@@ -47,8 +48,8 @@ def get_func_name(func):
     return func.__name__
 
 
-def merge_results(validation_result, train_result=None, time_diff=None):
-    result = dict()
+def merge_results(validation_result, train_result=None, time_diff=None, is_early_stopped=False):
+    result = dict(is_early_stopped=is_early_stopped)
     if train_result is None:
         train_result = dict()
     for k, v in train_result.items():
@@ -62,14 +63,14 @@ def merge_results(validation_result, train_result=None, time_diff=None):
 
 def pprint_results(run_results, use_style=True, print_interval=1):
     s = StyleCoder(use_style)
-    previous_total = 0
+    is_es = False
     for run_idx, worker_results in enumerate(run_results):
         print(f"\n{s.BOLD}Run {run_idx}: {s.ENDC}")
         total = 0
         for worker_idx, results in enumerate(worker_results):
-            if not len(results):
-                continue
+            if not len(results): continue
             time_diff = results[0].pop(TIME_DIFF)
+            is_es = results[0].pop(EARLY_STOPPED) or is_es
             acc_metrics = {k: v for k, v in results[0].items()}
             total = len(results)
             print(
@@ -81,6 +82,8 @@ def pprint_results(run_results, use_style=True, print_interval=1):
                 val = results[idx]
                 if TIME_DIFF in val:
                     time_diff = val.pop(TIME_DIFF)
+                if EARLY_STOPPED in val:
+                    is_es = val.pop(EARLY_STOPPED) or is_es
                 metrics_join = []
                 for k, v in val.items():
                     if idx == total - 1:
@@ -98,7 +101,7 @@ def pprint_results(run_results, use_style=True, print_interval=1):
                     for k, v in acc_metrics.items()
                 ]
             )
-            es_indicator = " ES" if previous_total > total else ""
+            es_indicator = " Early Stopped" if is_es else ""
             print(
                 f"{s.BOLD}======================"
                 f"\nWorker {worker_idx} post-analysis"
@@ -106,4 +109,3 @@ def pprint_results(run_results, use_style=True, print_interval=1):
                 f"\n[epoch 1 {s.BOLD}→{s.ENDC} {total}{s.BOLDCYAN}"
                 f"{es_indicator}{s.ENDC}]\t{acc_metrics_join}\n"
             )
-        previous_total = total
