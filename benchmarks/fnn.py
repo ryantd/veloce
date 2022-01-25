@@ -50,6 +50,11 @@ def train_fnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     pprint_results(results)
     """
     optimizer=Adam
+    early_stopping patience=2
+    valid/BCELoss: 0.50002	valid/auroc: 0.74771
+
+    optimizer=Adam
+    weight_decay=1e-3
     valid/BCELoss: 0.49254	valid/auroc: 0.75292
     """
 

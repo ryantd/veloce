@@ -45,6 +45,12 @@ def train_ipnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     )
     results = trainer.run()
     pprint_results(results)
+    """
+    optimizer=Adam
+    early_stopping patience=2
+    weight_decay=1e-3
+    valid/BCELoss: 0.49148	valid/auroc: 0.75238
+    """
 
 
 if __name__ == "__main__":

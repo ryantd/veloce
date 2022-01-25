@@ -9,7 +9,7 @@ from phetware import NeuralNetTrainer
 from benchmarks.dataset import load_dataset_builtin
 
 
-def train_pnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
+def train_opnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     datasets, feature_defs, torch_dataset_options = load_dataset_builtin(
         dataset_name="criteo_10k",
         feature_def_settings={"dnn": {"dense": True, "sparse": True}},
@@ -33,14 +33,22 @@ def train_pnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         loss_fn=nn.BCELoss(),
         optimizer=torch.optim.Adam,
         metric_fns=[auroc],
+        use_early_stopping=True,
+        early_stopping_args={"patience": 2},
         num_workers=num_workers,
         use_gpu=use_gpu,
         callbacks=["json", "tbx"],
     )
     results = trainer.run()
     pprint_results(results)
+    """
+    optimizer=Adam
+    early_stopping patience=2
+    weight_decay=1e-3
+    valid/BCELoss: 0.49203	valid/auroc: 0.75427
+    """
 
 
 if __name__ == "__main__":
     environ_validate(num_cpus=1 + 2)
-    train_pnn_dist(num_workers=2)
+    train_opnn_dist(num_workers=2)

@@ -21,6 +21,7 @@ class PNN(BaseModel):
         use_inner=True,
         use_outter=False,
         outter_kernel_type="mat",
+        embedding_size=4,
         # dnn related
         dnn_hidden_units=(256, 128),
         dnn_use_bn=False,
@@ -46,6 +47,7 @@ class PNN(BaseModel):
         self.use_inner = use_inner
         self.use_outter = use_outter
         self.outter_kernel_type = outter_kernel_type
+        self.embedding_size = embedding_size
 
         product_out_dim = 0
         inputs_dim = compute_inputs_dim(self.fds.dnn_defs_sparse, feature_group=True)
