@@ -152,14 +152,15 @@ def compute_inputs_dim(
 
 def collect_inputs_and_embeddings(
     X,
-    sparse_feature_defs,
+    sparse_feature_defs=None,
     dense_feature_defs=None,
     feature_name_to_index=None,
     embedding_layer_def=None,
-    return_dense=True,
 ):
     if not feature_name_to_index:
         raise ValueError("Arg feature_name_to_index should be given")
+    sparse_feature_defs = sparse_feature_defs or []
+    dense_feature_defs = dense_feature_defs or []
     # embeddings part
     if not embedding_layer_def:
         sparse_embeddings = []
@@ -175,19 +176,17 @@ def collect_inputs_and_embeddings(
             )
             for feat in sparse_feature_defs
         ]
-    if return_dense:
-        # dense inputs part
-        dense_values = [
-            X[
-                :,
-                feature_name_to_index[feat.name][0] : feature_name_to_index[feat.name][
-                    1
-                ],
-            ]
-            for feat in dense_feature_defs
+    # dense inputs part
+    dense_values = [
+        X[
+            :,
+            feature_name_to_index[feat.name][0] : feature_name_to_index[feat.name][
+                1
+            ],
         ]
-        return dense_values, sparse_embeddings
-    return sparse_embeddings
+        for feat in dense_feature_defs
+    ]
+    return dense_values, sparse_embeddings
 
 
 def concatenate(inputs, axis=-1):

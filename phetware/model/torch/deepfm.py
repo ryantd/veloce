@@ -114,12 +114,11 @@ class DeepFM(BaseModel):
             # fm_1
             logit = self.fm_1(X)
             # fm_2
-            fm_2_sparse_embs = collect_inputs_and_embeddings(
+            _, fm_2_sparse_embs = collect_inputs_and_embeddings(
                 X,
                 sparse_feature_defs=self.fds.fm_2_defs_sparse,
                 feature_name_to_index=self.feature_name_to_index,
                 embedding_layer_def=self.fm_2_embedding_layer,
-                return_dense=False,
             )
             fm_2_input = torch.cat(fm_2_sparse_embs, dim=1)
             logit += self.fm_2(fm_2_input)
