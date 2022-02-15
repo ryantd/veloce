@@ -104,7 +104,8 @@ class NeuralNetTrainer(object):
                 )
                 if use_checkpoint:
                     latest_ckpt = trainer.latest_checkpoint
-                    if latest_ckpt: latest_ckpt["epoch_id"] = 0
+                    if latest_ckpt:
+                        latest_ckpt["epoch_id"] = 0
                 trainer.shutdown()
             else:
                 if len(self.multi_runs) > 1:

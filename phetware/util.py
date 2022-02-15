@@ -48,7 +48,9 @@ def get_func_name(func):
     return func.__name__
 
 
-def merge_results(validation_result, train_result=None, time_diff=None, is_early_stopped=False):
+def merge_results(
+    validation_result, train_result=None, time_diff=None, is_early_stopped=False
+):
     result = dict(is_early_stopped=is_early_stopped)
     if train_result is None:
         train_result = dict()
@@ -68,7 +70,8 @@ def pprint_results(run_results, use_style=True, print_interval=1):
         print(f"\n{s.BOLD}Run {run_idx}: {s.ENDC}")
         total = 0
         for worker_idx, results in enumerate(worker_results):
-            if not len(results): continue
+            if not len(results):
+                continue
             time_diff = results[0].pop(TIME_DIFF)
             is_es = results[0].pop(EARLY_STOPPED) or is_es
             acc_metrics = {k: v for k, v in results[0].items()}

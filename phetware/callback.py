@@ -19,5 +19,8 @@ class EarlyStoppingCallback(TrainingCallback):
                 self.stored_results.append([worker_result])
             else:
                 self.stored_results[worker_id].append(worker_result)
-            if "is_early_stopped" in worker_result and worker_result["is_early_stopped"]:
+            if (
+                "is_early_stopped" in worker_result
+                and worker_result["is_early_stopped"]
+            ):
                 self.trainer.shutdown()

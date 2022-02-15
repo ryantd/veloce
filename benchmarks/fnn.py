@@ -37,6 +37,8 @@ def train_fnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         },
         metric_fns=[auroc],
         use_static_graph=True,
+        use_early_stopping=True,
+        early_stopping_args={"patience": 2},
         num_workers=num_workers,
         use_gpu=use_gpu,
         callbacks=["json", "tbx"],

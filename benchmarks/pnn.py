@@ -9,7 +9,7 @@ from phetware import NeuralNetTrainer
 from benchmarks.dataset import load_dataset_builtin
 
 
-def train_opnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
+def train_ipnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     datasets, feature_defs, torch_dataset_options = load_dataset_builtin(
         dataset_name="criteo_10k",
         feature_def_settings={"dnn": {"dense": True, "sparse": True}},
@@ -20,8 +20,9 @@ def train_opnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         module=PNN,
         module_params={
             "dnn_feature_defs": feature_defs["dnn"],
+            "use_inner": True,
             "use_outter": True,
-            "use_inner": False,
+            "dnn_activation": nn.Tanh,
             "dnn_dropout": 0.5,
             "seed": rand_seed,
         },
@@ -32,6 +33,9 @@ def train_opnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         batch_size=512,
         loss_fn=nn.BCELoss(),
         optimizer=torch.optim.Adam,
+        optimizer_args={
+            "weight_decay": 1e-3,
+        },
         metric_fns=[auroc],
         use_early_stopping=True,
         early_stopping_args={"patience": 2},
@@ -44,10 +48,11 @@ def train_opnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     """
     optimizer=Adam
     early_stopping patience=2
-    valid/BCELoss: 0.49203	valid/auroc: 0.75427
+    weight_decay=1e-3
+    valid/BCELoss: 0.49121	valid/auroc: 0.75316
     """
 
 
 if __name__ == "__main__":
     environ_validate(num_cpus=1 + 2)
-    train_opnn_dist(num_workers=2)
+    train_ipnn_dist(num_workers=2)

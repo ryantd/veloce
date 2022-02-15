@@ -18,20 +18,20 @@ class WideAndDeep(BaseModel):
         linear_feature_defs=None,
         dnn_feature_defs=None,
         # linear related
-        l2_reg_linear=1e-5,
+        l2_reg_linear=1e-3,
         # dnn related
         dnn_hidden_units=(256, 128),
         dnn_use_bn=False,
         dnn_activation="relu",
         dnn_dropout=0,
-        l2_reg_embedding=1e-5,
-        l2_reg_dnn=0,
+        l2_reg_embedding=1e-3,
+        l2_reg_dnn=1e-3,
         # base configs
         seed=1024,
         output_fn=torch.sigmoid,
         output_fn_args=None,
         device="cpu",
-        init_std=0.0001,
+        init_std=1e-4,
         **kwargs
     ):
         super(WideAndDeep, self).__init__(
