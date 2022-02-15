@@ -92,6 +92,7 @@ class NeuralNetTrainer(object):
             run_configs.update(addons)
             run_configs.update(addons_module_params)
 
+            # early stopping part
             if not self.use_early_stopping:
                 results.append(
                     trainer.run(
@@ -102,28 +103,30 @@ class NeuralNetTrainer(object):
                         checkpoint=latest_ckpt,
                     )
                 )
-                if use_checkpoint:
-                    latest_ckpt = trainer.latest_checkpoint
-                    if latest_ckpt:
-                        latest_ckpt["epoch_id"] = 0
-                trainer.shutdown()
+
             else:
-                if len(self.multi_runs) > 1:
-                    print("warning: early_stopping not support multiple runs")
-                    self.multi_runs = [self.multi_runs[0]]
                 # hacky solution on EarlyStopping
-                es = EarlyStoppingCallback(trainer)
-                self.callbacks.append(es)
+                _es = EarlyStoppingCallback(trainer)
+                _callbacks = copy.deepcopy(self.callbacks)
+                _callbacks.append(_es)
                 try:
                     trainer.run(
                         train_func=Generic(self.model),
                         dataset=self.dataset,
-                        callbacks=self.callbacks,
+                        callbacks=_callbacks,
                         config=run_configs,
                         checkpoint=latest_ckpt,
                     )
                 except:
                     pass
-                results = [es.stored_results]
+                results.append(_es.stored_results)
 
+            # checkpoint part
+            if use_checkpoint:
+                latest_ckpt = trainer.latest_checkpoint
+                if latest_ckpt:
+                    latest_ckpt["epoch_id"] = 0
+
+        if not self.use_early_stopping:
+            trainer.shutdown()
         return results

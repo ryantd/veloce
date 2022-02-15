@@ -27,7 +27,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "seed": rand_seed,
             "output_fn": torch.sigmoid,
             "dnn_dropout": 0.5,
-            "use_fm": True
+            "use_fm": True,
         },
         dataset=datasets,
         dataset_options=torch_dataset_options,

@@ -93,6 +93,7 @@ class Epochvisor(object):
         feature_column_dtypes = self.dataset_options["feature_column_dtypes"]
         start_epoch = 0
         results = []
+        is_checkpoint_based = False
 
         # early stopping related
         previous_epoch_loss = 1
@@ -100,6 +101,7 @@ class Epochvisor(object):
         is_early_stopped = False
 
         if self.checkpoint:
+            is_checkpoint_based = True
             model_state_dict = self.checkpoint.get("model_state_dict", None)
             optimizer_state_dict = self.checkpoint.get("optimizer_state_dict", None)
             start_epoch = self.checkpoint.get("epoch_id", 0)
@@ -140,7 +142,10 @@ class Epochvisor(object):
                 if self.use_early_stopping:
                     if latest_epoch_loss > previous_epoch_loss:
                         es_trigger_times += 1
-                        if es_trigger_times >= self.early_stopping_args["patience"]:
+                        if (
+                            es_trigger_times >= self.early_stopping_args["patience"]
+                            and epoch_id != self.epochs - 1
+                        ):
                             is_early_stopped = True
                     else:
                         es_trigger_times = 0
@@ -151,6 +156,7 @@ class Epochvisor(object):
                     train_result=train_result,
                     time_diff=end_ts - start_ts,
                     is_early_stopped=is_early_stopped,
+                    is_checkpoint_based=is_checkpoint_based,
                 )
                 train.save_checkpoint(
                     epoch_id=epoch_id,

@@ -180,9 +180,7 @@ def collect_inputs_and_embeddings(
     dense_values = [
         X[
             :,
-            feature_name_to_index[feat.name][0] : feature_name_to_index[feat.name][
-                1
-            ],
+            feature_name_to_index[feat.name][0] : feature_name_to_index[feat.name][1],
         ]
         for feat in dense_feature_defs
     ]

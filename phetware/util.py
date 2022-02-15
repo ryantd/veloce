@@ -2,6 +2,7 @@ import inspect
 
 TIME_DIFF = "epoch_seconds"
 EARLY_STOPPED = "is_early_stopped"
+CHECKPOINT_BASED = "is_checkpoint_based"
 
 
 class StyleCoder(object):
@@ -49,9 +50,15 @@ def get_func_name(func):
 
 
 def merge_results(
-    validation_result, train_result=None, time_diff=None, is_early_stopped=False
+    validation_result,
+    train_result=None,
+    time_diff=None,
+    is_early_stopped=False,
+    is_checkpoint_based=False,
 ):
-    result = dict(is_early_stopped=is_early_stopped)
+    result = dict(
+        is_early_stopped=is_early_stopped, is_checkpoint_based=is_checkpoint_based
+    )
     if train_result is None:
         train_result = dict()
     for k, v in train_result.items():
@@ -66,6 +73,7 @@ def merge_results(
 def pprint_results(run_results, use_style=True, print_interval=1):
     s = StyleCoder(use_style)
     is_es = False
+    is_ckpt = False
     for run_idx, worker_results in enumerate(run_results):
         print(f"\n{s.BOLD}Run {run_idx}: {s.ENDC}")
         total = 0
@@ -74,6 +82,7 @@ def pprint_results(run_results, use_style=True, print_interval=1):
                 continue
             time_diff = results[0].pop(TIME_DIFF)
             is_es = results[0].pop(EARLY_STOPPED) or is_es
+            is_ckpt = results[0].pop(CHECKPOINT_BASED) or is_ckpt
             acc_metrics = {k: v for k, v in results[0].items()}
             total = len(results)
             print(
@@ -87,6 +96,8 @@ def pprint_results(run_results, use_style=True, print_interval=1):
                     time_diff = val.pop(TIME_DIFF)
                 if EARLY_STOPPED in val:
                     is_es = val.pop(EARLY_STOPPED) or is_es
+                if CHECKPOINT_BASED in val:
+                    is_ckpt = val.pop(CHECKPOINT_BASED) or is_ckpt
                 metrics_join = []
                 for k, v in val.items():
                     if idx == total - 1:
@@ -104,11 +115,12 @@ def pprint_results(run_results, use_style=True, print_interval=1):
                     for k, v in acc_metrics.items()
                 ]
             )
-            es_indicator = " Early Stopped" if is_es else ""
+            es_indicator = " ES" if is_es else ""
+            ckpt_indicator = " CKPT" if is_ckpt else ""
             print(
                 f"{s.BOLD}======================"
                 f"\nWorker {worker_idx} post-analysis"
                 f"\n======================{s.ENDC}"
                 f"\n[epoch 1 {s.BOLD}→{s.ENDC} {total}{s.BOLDCYAN}"
-                f"{es_indicator}{s.ENDC}]\t{acc_metrics_join}\n"
+                f"{ckpt_indicator}{es_indicator}{s.ENDC}]\t{acc_metrics_join}\n"
             )
