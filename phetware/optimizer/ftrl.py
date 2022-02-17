@@ -3,23 +3,23 @@ from torch.optim.optimizer import Optimizer
 
 
 class FTRL(Optimizer):
-    def __init__(self, params, alpha=1.0, beta=1.0, l1=1.0, l2=1.0):
-        if not 0.0 < alpha:
-            raise ValueError("Invalid alpha parameter: {}".format(alpha))
+    def __init__(self, params, lr=0.1, beta=1.0, l1=0.01, weight_decay=0):
+        if not 0.0 < lr:
+            raise ValueError("Invalid lr parameter: {}".format(lr))
         if not 0.0 < beta:
             raise ValueError("Invalid beta parameter: {}".format(beta))
         if not 0.0 <= l1:
             raise ValueError("Invalid l1 parameter: {}".format(l1))
-        if not 0.0 <= l2:
-            raise ValueError("Invalid l2 parameter: {}".format(l2))
 
-        defaults = dict(alpha=alpha, beta=beta, l1=l1, l2=l2)
+        defaults = dict(lr=lr, beta=beta, l1=l1, weight_decay=weight_decay)
         super(FTRL, self).__init__(params, defaults)
 
+    @torch.no_grad()
     def step(self, closure=None):
         loss = None
         if closure is not None:
-            loss = closure()
+            with torch.enable_grad():
+                loss = closure()
         for group in self.param_groups:
             for p in group["params"]:
                 if p.grad is None:
@@ -29,14 +29,21 @@ class FTRL(Optimizer):
                 if len(state) == 0:
                     state["z"] = torch.zeros_like(p.data)
                     state["n"] = torch.zeros_like(p.data)
+                # update z, n
                 z, n = state["z"], state["n"]
-                theta = (n + grad ** 2).sqrt() / group["alpha"] - n.sqrt()
-                z.add_(grad - theta * p.data)
+                sigma = -n.sqrt()
                 n.add_(grad ** 2)
-                p.data = (
-                    -1
-                    / (group["l2"] + (group["beta"] + n.sqrt()) / group["alpha"])
-                    * (z - group["l1"] * z.sign())
+                denom = n.sqrt()
+                sigma += denom
+                sigma /= group["lr"]
+                z.add_(grad - sigma * p.data)
+                # update weight
+                denom += group["beta"]
+                denom /= group["lr"]
+                denom += group["weight_decay"]
+                d = z.sign() * torch.maximum(
+                    z.abs() - group["l1"],
+                    torch.zeros_like(z)
                 )
-                p.data[z.abs() < group["l1"]] = 0
+                p.data = -d / denom
         return loss

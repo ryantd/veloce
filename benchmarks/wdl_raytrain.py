@@ -52,7 +52,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
                 dict(cls=torch.optim.Adagrad, model_key="deep_model"),
                 dict(
                     cls=FTRL,
-                    args=dict(alpha=1.0, beta=1.0, l1=1.0, l2=1.0),
+                    args=dict(lr=1.0, beta=1.0, l1=1.0),
                     model_key="wide_model",
                 ),
             ),
