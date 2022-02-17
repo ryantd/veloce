@@ -3,6 +3,7 @@ import torch.nn as nn
 from torchmetrics.functional import auroc
 
 from phetware.model.torch import WideAndDeep
+from phetware.optimizer import OptimizerStack, FTRL
 from phetware.util import pprint_results
 from phetware import NeuralNetTrainer
 from phetware.environ import environ_validate
@@ -14,7 +15,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         dataset_name="criteo_10k",
         feature_def_settings={
             "dnn": {"dense": True, "sparse": True},
-            "linear": {"dense": True, "sparse": False},
+            "linear": {"dense": True, "sparse": True},
         },
     )
 
@@ -34,10 +35,10 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         epochs=20,
         batch_size=512,
         loss_fn=nn.BCELoss(),
-        optimizer=torch.optim.Adam,
-        optimizer_args={
-            "weight_decay": 1e-3,
-        },
+        optimizer=OptimizerStack(
+            dict(cls=torch.optim.Adam, args=dict(weight_decay=1e-3), model_key="deep_model"),
+            dict(cls=FTRL, args=dict(lr=4.25, weight_decay=1e-3), model_key="wide_model"),
+        ),
         metric_fns=[auroc],
         use_early_stopping=True,
         early_stopping_args={"patience": 2},
@@ -52,6 +53,12 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     early_stopping patience=2
     weight_decay=1e-3
     valid/BCELoss: 0.49301	valid/auroc: 0.75244
+
+    optimizer=FTRL + Adam
+    early_stopping patience=2
+    weight_decay=1e-3
+    FTRL lr=4.25
+    valid/BCELoss: 0.50941	valid/auroc: 0.73046
     """
 
 

@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from sklearn.metrics import log_loss
+from torchmetrics.functional import auroc
 
 from phetware.model.torch import DeepFM
 from phetware.util import pprint_results
@@ -11,7 +11,7 @@ from benchmarks.dataset import load_dataset_builtin
 
 def train_deepfm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     datasets, feature_defs, torch_dataset_options = load_dataset_builtin(
-        dataset_name="criteo_mini",
+        dataset_name="criteo_10k",
         feature_def_settings={
             "fm_1": {"dense": True, "sparse": True},
             "fm_2": {"dense": False, "sparse": True},
@@ -28,22 +28,33 @@ def train_deepfm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "dnn_feature_defs": feature_defs["dnn"],
             "seed": rand_seed,
             "output_fn": torch.sigmoid,
-            "dnn_dropout": 0.2,
+            "dnn_dropout": 0.5,
         },
         dataset=datasets,
         dataset_options=torch_dataset_options,
         # trainer configs
-        epochs=10,
-        batch_size=32,
+        epochs=20,
+        batch_size=512,
         loss_fn=nn.BCELoss(),
         optimizer=torch.optim.Adam,
-        metric_fns=[log_loss],
+        optimizer_args={
+            "weight_decay": 1e-3,
+        },
+        metric_fns=[auroc],
+        use_early_stopping=True,
+        early_stopping_args={"patience": 2},
         num_workers=num_workers,
         use_gpu=use_gpu,
         callbacks=["json", "tbx"],
     )
     results = trainer.run()
     pprint_results(results)
+    """
+    optimizer=Adam
+    early_stopping patience=2
+    weight_decay=1e-3
+    valid/BCELoss: 0.50389	valid/auroc: 0.73780
+    """
 
 
 if __name__ == "__main__":

@@ -44,15 +44,15 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "batch_size": 32,
             "loss_fn": LossFnStack(
                 # support multiple loss functions with fixed weight
-                dict(fn=nn.BCELoss(), weight=0.2),
-                dict(fn=nn.HingeEmbeddingLoss(), weight=0.8),
+                dict(fn=nn.BCELoss(), weight=0.8),
+                dict(fn=nn.HingeEmbeddingLoss(), weight=0.2),
             ),
             "optimizer": OptimizerStack(
                 # support multiple optimizers
-                dict(cls=torch.optim.Adagrad, model_key="deep_model"),
+                dict(cls=torch.optim.Adam, model_key="deep_model"),
                 dict(
                     cls=FTRL,
-                    args=dict(lr=1.0, beta=1.0, l1=1.0),
+                    args=dict(lr=4.25, weight_decay=1e-3),
                     model_key="wide_model",
                 ),
             ),

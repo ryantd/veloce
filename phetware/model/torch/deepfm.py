@@ -20,21 +20,21 @@ class DeepFM(BaseModel):
         dnn_feature_defs=None,
         # fm related
         use_fm=True,
-        l2_reg_fm_1=1e-5,
-        l2_reg_fm_2=1e-5,
+        l2_reg_fm_1=1e-3,
+        l2_reg_fm_2=1e-3,
         # dnn related
         dnn_hidden_units=(256, 128),
         dnn_use_bn=False,
         dnn_activation="relu",
-        l2_reg_embedding=1e-5,
-        l2_reg_dnn=0,
+        l2_reg_embedding=1e-3,
+        l2_reg_dnn=1e-3,
         dnn_dropout=0,
         # base config
         seed=1024,
         output_fn=torch.sigmoid,
         output_fn_args=None,
         device="cpu",
-        init_std=0.0001,
+        init_std=1e-4,
         **kwargs
     ):
         super(DeepFM, self).__init__(
