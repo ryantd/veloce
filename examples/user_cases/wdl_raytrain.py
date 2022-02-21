@@ -10,7 +10,7 @@ from phetware.train_fn import WideAndDeep
 from phetware.optimizer import OptimizerStack, FTRL
 from phetware.loss_fn import LossFnStack
 from phetware.util import pprint_results
-from benchmarks.dataset import load_dataset_builtin
+from examples.dataset import load_dataset_builtin
 
 
 def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):

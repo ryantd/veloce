@@ -2,33 +2,32 @@ import torch
 import torch.nn as nn
 from torchmetrics.functional import auroc
 
-from phetware.model.torch import DeepFM
+from phetware.model.torch import WideAndDeep
 from phetware.util import pprint_results
-from phetware.environ import environ_validate
 from phetware import NeuralNetTrainer
-from benchmarks.dataset import load_dataset_builtin
+from phetware.environ import environ_validate
+from examples.dataset import load_dataset_builtin
 
 
-def train_deepfm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
+def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     datasets, feature_defs, torch_dataset_options = load_dataset_builtin(
         dataset_name="criteo_10k",
         feature_def_settings={
-            "fm_1": {"dense": True, "sparse": True},
-            "fm_2": {"dense": False, "sparse": True},
             "dnn": {"dense": True, "sparse": True},
+            "fm": {"dense": True, "sparse": False},
         },
     )
 
     trainer = NeuralNetTrainer(
         # module and dataset configs
-        module=DeepFM,
+        module=WideAndDeep,
         module_params={
-            "fm_1_feature_defs": feature_defs["fm_1"],
-            "fm_2_feature_defs": feature_defs["fm_2"],
             "dnn_feature_defs": feature_defs["dnn"],
+            "linear_feature_defs": feature_defs["fm"],
             "seed": rand_seed,
             "output_fn": torch.sigmoid,
             "dnn_dropout": 0.5,
+            "use_fm": True,
         },
         dataset=datasets,
         dataset_options=torch_dataset_options,
@@ -53,10 +52,10 @@ def train_deepfm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     optimizer=Adam
     early_stopping patience=2
     weight_decay=1e-3
-    valid/BCELoss: 0.50389	valid/auroc: 0.73780
+    valid/BCELoss: 0.49278	valid/auroc: 0.75269
     """
 
 
 if __name__ == "__main__":
     environ_validate(num_cpus=1 + 2)
-    train_deepfm_dist(num_workers=2)
+    train_wdl_dist(num_workers=2)

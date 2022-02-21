@@ -2,65 +2,66 @@ import torch
 import torch.nn as nn
 from torchmetrics.functional import auroc
 
-from phetware.model.torch import FNN
+from phetware.model.torch import WideAndDeep
+from phetware.optimizer import OptimizerStack, FTRL
 from phetware.util import pprint_results
-from phetware.environ import environ_validate
 from phetware import NeuralNetTrainer
-from benchmarks.dataset import load_dataset_builtin
+from phetware.environ import environ_validate
+from examples.dataset import load_dataset_builtin
 
 
-def train_fnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
+def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     datasets, feature_defs, torch_dataset_options = load_dataset_builtin(
         dataset_name="criteo_10k",
         feature_def_settings={
             "dnn": {"dense": True, "sparse": True},
+            "linear": {"dense": True, "sparse": True},
         },
     )
 
     trainer = NeuralNetTrainer(
         # module and dataset configs
-        module=FNN,
+        module=WideAndDeep,
         module_params={
             "dnn_feature_defs": feature_defs["dnn"],
-            "pre_trained_mode": True,
+            "linear_feature_defs": feature_defs["linear"],
             "seed": rand_seed,
+            "output_fn": torch.sigmoid,
             "dnn_dropout": 0.5,
         },
         dataset=datasets,
         dataset_options=torch_dataset_options,
         # trainer configs
+        epochs=20,
         batch_size=512,
         loss_fn=nn.BCELoss(),
-        optimizer=torch.optim.Adam,
-        optimizer_args={
-            "weight_decay": 1e-3,
-        },
+        optimizer=OptimizerStack(
+            dict(cls=torch.optim.Adam, args=dict(weight_decay=1e-3), model_key="deep_model"),
+            dict(cls=FTRL, args=dict(lr=4.25, weight_decay=1e-3), model_key="wide_model"),
+        ),
         metric_fns=[auroc],
-        use_static_graph=True,
         use_early_stopping=True,
         early_stopping_args={"patience": 2},
         num_workers=num_workers,
         use_gpu=use_gpu,
         callbacks=["json", "tbx"],
     )
-    results = trainer.run(
-        multi_runs=[
-            {"epochs": 10},
-            {"epochs": 10, "module_params": {"pre_trained_mode": False}},
-        ]
-    )
+    results = trainer.run()
     pprint_results(results)
     """
     optimizer=Adam
     early_stopping patience=2
-    valid/BCELoss: 0.50002	valid/auroc: 0.74771
-
-    optimizer=Adam
     weight_decay=1e-3
-    valid/BCELoss: 0.49254	valid/auroc: 0.75292
+    valid/BCELoss: 0.49301	valid/auroc: 0.75244
+
+    optimizer=FTRL + Adam
+    early_stopping patience=2
+    weight_decay=1e-3
+    FTRL lr=4.25
+    valid/BCELoss: 0.50941	valid/auroc: 0.73046
     """
 
 
 if __name__ == "__main__":
     environ_validate(num_cpus=1 + 2)
-    train_fnn_dist(num_workers=2)
+    train_wdl_dist(num_workers=2)
