@@ -41,9 +41,6 @@ class FTRL(Optimizer):
                 denom += group["beta"]
                 denom /= group["lr"]
                 denom += group["weight_decay"]
-                d = z.sign() * torch.maximum(
-                    z.abs() - group["l1"],
-                    torch.zeros_like(z)
-                )
+                d = z.sign() * torch.maximum(z.abs() - group["l1"], torch.zeros_like(z))
                 p.data = -d / denom
         return loss

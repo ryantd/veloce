@@ -7,11 +7,11 @@ from phetware.optimizer import OptimizerStack, FTRL
 from phetware.util import pprint_results
 from phetware import NeuralNetTrainer
 from phetware.environ import environ_validate
-from examples.dataset import load_dataset_builtin
+from examples.dataset import load_dataset
 
 
 def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
-    datasets, feature_defs, torch_dataset_options = load_dataset_builtin(
+    datasets, feature_defs, torch_dataset_options = load_dataset(
         dataset_name="criteo_10k",
         feature_def_settings={
             "dnn": {"dense": True, "sparse": True},
@@ -36,8 +36,14 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         batch_size=512,
         loss_fn=nn.BCELoss(),
         optimizer=OptimizerStack(
-            dict(cls=torch.optim.Adam, args=dict(weight_decay=1e-3), model_key="deep_model"),
-            dict(cls=FTRL, args=dict(lr=4.25, weight_decay=1e-3), model_key="wide_model"),
+            dict(
+                cls=torch.optim.Adam,
+                args=dict(weight_decay=1e-3),
+                model_key="deep_model",
+            ),
+            dict(
+                cls=FTRL, args=dict(lr=4.25, weight_decay=1e-3), model_key="wide_model"
+            ),
         ),
         metric_fns=[auroc],
         use_early_stopping=True,

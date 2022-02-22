@@ -6,11 +6,11 @@ from phetware.model.torch import PNN
 from phetware.util import pprint_results
 from phetware.environ import environ_validate
 from phetware import NeuralNetTrainer
-from examples.dataset import load_dataset_builtin
+from examples.dataset import load_dataset
 
 
 def train_ipnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
-    datasets, feature_defs, torch_dataset_options = load_dataset_builtin(
+    datasets, feature_defs, torch_dataset_options = load_dataset(
         dataset_name="criteo_10k",
         feature_def_settings={"dnn": {"dense": True, "sparse": True}},
     )

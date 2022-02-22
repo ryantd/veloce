@@ -1,10 +1,12 @@
+import inspect
+
 import torch
 import torch.nn as nn
 import torchmetrics
 import ray.train as train
 
 from phetware.util import get_package_name
-from phetware.inputs import reformat_input_features
+from phetware.inputs import reformat_input_features, is_feature_defs
 from phetware.model.torch import (
     WideAndDeep as _WideAndDeep,
     DeepFM as _DeepFM,
@@ -89,10 +91,12 @@ class Generic(BaseTrainFn):
     def __call__(self, origin_config):
         super(Generic, self).__call__(origin_config)
         config = dict()
+        requires_arg = list(inspect.signature(self.model.__init__).parameters.keys())
+        requires_arg.pop(0)
         for k, v in origin_config.items():
-            if k.endswith("_feature_defs"):
-                config[k] = reformat_input_features(v)
-            else:
+            if is_feature_defs(v):
+                v = reformat_input_features(v)
+            if k in requires_arg:
                 config[k] = v
         model = train.torch.prepare_model(
             model=self.model(**config), ddp_kwargs=self.ddp_options

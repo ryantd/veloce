@@ -12,10 +12,9 @@ class SparseFeat(
         [
             "name",
             "vocabulary_size",
+            "column_idx",
             "embedding_dim",
-            "use_hash",
             "dtype",
-            "embedding_name",
             "group_name",
             "feat_type",
         ],
@@ -27,29 +26,22 @@ class SparseFeat(
         cls,
         name,
         vocabulary_size,
+        column_idx,
+        *,
         embedding_dim=4,
-        use_hash=False,
         dtype="int32",
-        embedding_name=None,
         group_name=DEFAULT_GROUP_NAME,
         feat_type="SparseFeat",
     ):
-        if embedding_name is None:
-            embedding_name = name
         if embedding_dim == "auto":
             embedding_dim = 6 * int(pow(vocabulary_size, 0.25))
-        if use_hash:
-            print(
-                "Notice! Feature Hashing on the fly currently is not supported in torch version,you can use tensorflow version!"
-            )
         return super(SparseFeat, cls).__new__(
             cls,
             name,
             int(vocabulary_size),
+            int(column_idx),
             int(embedding_dim),
-            use_hash,
             dtype,
-            embedding_name,
             group_name,
             feat_type,
         )
@@ -58,16 +50,27 @@ class SparseFeat(
         return self.name.__hash__()
 
 
-class DenseFeat(namedtuple("DenseFeat", ["name", "dimension", "dtype", "feat_type"])):
+class DenseFeat(
+    namedtuple("DenseFeat", ["name", "column_idx", "dimension", "dtype", "feat_type"])
+):
     key = "dense"
 
-    def __new__(cls, name, dimension=1, dtype="float32", feat_type="DenseFeat"):
+    def __new__(
+        cls, name, column_idx, *, dimension=1, dtype="float32", feat_type="DenseFeat"
+    ):
         return super(DenseFeat, cls).__new__(
-            cls, name, int(dimension), dtype, feat_type
+            cls, name, int(column_idx), int(dimension), dtype, feat_type
         )
 
     def __hash__(self):
         return self.name.__hash__()
+
+
+def is_feature_defs(value):
+    try:
+        return all(["feat_type" in v for v in value])
+    except:
+        return False
 
 
 def reformat_input_features(feature_defs):
@@ -119,7 +122,7 @@ def embedding_dict_gen(
 ):
     embedding_dict = nn.ModuleDict(
         {
-            feat.embedding_name: nn.Embedding(
+            feat.name: nn.Embedding(
                 feat.vocabulary_size,
                 feat.embedding_dim if not linear else 1,
                 sparse=sparse,
@@ -166,7 +169,7 @@ def collect_inputs_and_embeddings(
         sparse_embeddings = []
     else:
         sparse_embeddings = [
-            embedding_layer_def[feat.embedding_name](
+            embedding_layer_def[feat.name](
                 X[
                     :,
                     feature_name_to_index[feat.name][0] : feature_name_to_index[

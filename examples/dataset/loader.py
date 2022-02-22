@@ -10,7 +10,7 @@ FEAT_DEF_RESERVED_GLOBAL = "_global_settings"
 EMBEDDING_DIM_DEFAULT = 4
 
 
-def load_dataset_builtin(
+def load_dataset(
     dataset_name="criteo_mini",
     feature_def_settings=None,
     valid_split_factor=0.8,

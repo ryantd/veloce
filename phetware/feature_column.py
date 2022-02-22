@@ -28,6 +28,7 @@ class SparseFeatureDef(object):
             sparse_feat = SparseFeat(
                 col,
                 vocabulary_size=self.vocabulary_size_fn(df, col),
+                column_idx=df.columns.get_loc(col) - 1,
                 embedding_dim=self.embedding_dim,
             )
             sparse_df = sparse_df.append(sparse_feat._asdict(), ignore_index=True)
@@ -45,10 +46,14 @@ class DenseFeatureDef(object):
         else:
             raise NotImplementedError
 
-    def _call_pandas_dataframe(self, _: pd.DataFrame) -> pd.DataFrame:
+    def _call_pandas_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
         dense_df = pd.DataFrame()
         for col in self.col_selectors:
-            dense_feat = DenseFeat(col, self.dimension)
+            dense_feat = DenseFeat(
+                col,
+                column_idx=df.columns.get_loc(col) - 1,
+                dimension=self.dimension,
+            )
             dense_df = dense_df.append(dense_feat._asdict(), ignore_index=True)
         return dense_df
 

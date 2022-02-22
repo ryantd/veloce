@@ -1,1 +1,1 @@
-from .loader import load_dataset_builtin
+from .loader import load_dataset
