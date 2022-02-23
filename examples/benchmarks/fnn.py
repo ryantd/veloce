@@ -6,12 +6,11 @@ from phetware.model.torch import FNN
 from phetware.util import pprint_results
 from phetware.environ import environ_validate
 from phetware import NeuralNetTrainer
-from examples.dataset import load_dataset
+from examples.dataset import load_benchmark_dataset
 
 
 def train_fnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
-    datasets, feature_defs, torch_dataset_options = load_dataset(
-        dataset_name="criteo_10k",
+    datasets, feature_defs, torch_dataset_options = load_benchmark_dataset(
         feature_def_settings={
             "dnn": {"dense": True, "sparse": True},
         },

@@ -8,6 +8,17 @@ from phetware.optimizer import FTRL
 from phetware import NeuralNetTrainer
 from phetware.preprocessing import DataLoader
 
+"""
+A LR use-case of phetware
+
+What we have in the file:
+    1. A Native PyTorch nn.Module
+    2. Use phetware's DataLoader to load dataset, define features and do
+    preprocessing. This component is leveraged by _Ray Data_.
+    3. Use NeuralNetTrainer to launch a data scientist-friendly training
+    lifecycle. This component is leveraged by _Ray Train_.
+"""
+
 
 class LR(nn.Module):
     def __init__(
@@ -48,7 +59,7 @@ class LR(nn.Module):
         self.to(self.device)
 
     def forward(self, X):
-        # sparse forward
+        # sparse part
         sparse_embeds = [
             self.embedding_layer[feat.name](
                 X[:, feat.column_idx : feat.column_idx + 1].long()
@@ -57,7 +68,7 @@ class LR(nn.Module):
         ]
         sparse_embeds_cat = torch.cat(sparse_embeds, dim=-1)
         sparse_logit = torch.sum(sparse_embeds_cat, dim=-1, keepdim=False)
-        # dense forward
+        # dense part
         dense_values = [
             X[:, feat.column_idx : feat.column_idx + feat.dimension]
             for feat in self.dense_defs
@@ -69,7 +80,7 @@ class LR(nn.Module):
 
 
 def train_lr_dist(num_workers=2, use_gpu=False, rand_seed=2021):
-    dataloader = DataLoader("examples/dataset/ctr/criteo_mini.txt")
+    dataloader = DataLoader("examples/dataset/ctr/criteo_10k.txt")
     dataloader = (
         dataloader.set_label_column(label_name="label")
         .set_dense_features(feat_names=[f"I{i}" for i in range(1, 14)])
@@ -81,6 +92,7 @@ def train_lr_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     dense_defs = dataloader.dense_defs
     sparse_defs = dataloader.sparse_defs
     torch_dataset_options = dataloader.gen_torch_dataset_options(
+        # this order should follow the data file
         order=("dense", "sparse")
     )
 
@@ -88,7 +100,7 @@ def train_lr_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     # [{'name': 'I1', 'dimension': 1.0, 'dtype': 'float32', 'column_idx': 1.0,
     #   'feat_type': 'DenseFeat'},
     #  {'name': 'I2', 'dimension': 1.0, 'dtype': 'float32', 'column_idx': 2.0,
-    #   'feat_type': 'DenseFeat'}]
+    #   'feat_type': 'DenseFeat'}, ...]
 
     # sparse_defs is like,
     # [{'name': 'C1', 'vocabulary_size': 557.0, 'embedding_dim': 1.0,
@@ -96,8 +108,9 @@ def train_lr_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     #   'feat_type': 'SparseFeat'},
     #  {'name': 'C2', 'vocabulary_size': 507.0, 'embedding_dim': 1.0,
     #   'dtype': 'int32', 'group_name': 'default_group', 'column_idx': 15.0,
-    #   'feat_type': 'SparseFeat'}]
+    #   'feat_type': 'SparseFeat'}, ...]
 
+    # launch the trainer
     trainer = NeuralNetTrainer(
         # module and dataset configs
         module=LR,
