@@ -13,7 +13,6 @@ class LR(BaseModel):
         device="cpu",
         output_fn=torch.sigmoid,
         output_fn_args=None,
-        **kwargs
     ):
         super(LR, self).__init__(
             linear_feature_defs=linear_feature_defs,

@@ -39,7 +39,7 @@ def train_lr_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     pprint_results(results)
     """
     optimizer=FTRL
-    valid/BCELoss: 0.51007	valid/auroc: 0.73293
+    valid/BCELoss avg: 0.52129	valid/auroc avg: 0.70726
     """
 
 

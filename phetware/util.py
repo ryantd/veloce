@@ -74,9 +74,11 @@ def pprint_results(run_results, use_style=True, print_interval=1):
     s = StyleCoder(use_style)
     is_es = False
     is_ckpt = False
+    avg_metrics = {}
     for run_idx, worker_results in enumerate(run_results):
         print(f"\n{s.BOLD}Run {run_idx}: {s.ENDC}")
         total = 0
+        n_workers = len(worker_results)
         for worker_idx, results in enumerate(worker_results):
             if not len(results):
                 continue
@@ -84,6 +86,11 @@ def pprint_results(run_results, use_style=True, print_interval=1):
             is_es = results[0].pop(EARLY_STOPPED) or is_es
             is_ckpt = results[0].pop(CHECKPOINT_BASED) or is_ckpt
             acc_metrics = {k: v for k, v in results[0].items()}
+            if len(avg_metrics.keys()) == 0:
+                avg_metrics = {k: v for k, v in results[-1].items()}
+            else:
+                for k, v in results[-1].items():
+                    avg_metrics[k] += v
             total = len(results)
             print(
                 f"{s.BOLD}========================="
@@ -124,3 +131,16 @@ def pprint_results(run_results, use_style=True, print_interval=1):
                 f"\n[epoch 1 {s.BOLD}→{s.ENDC} {total}{s.BOLDCYAN}"
                 f"{ckpt_indicator}{es_indicator}{s.ENDC}]\t{acc_metrics_join}\n"
             )
+
+        metrics_join = []
+        for k, v in avg_metrics.items():
+            if k in [EARLY_STOPPED, CHECKPOINT_BASED, TIME_DIFF]:
+                continue
+            metrics_join.append(f"{k} avg: {'%.5f' % (v / n_workers)}")
+        metrics_join = "\t".join(metrics_join)
+        print(
+            f"{s.BOLD}========================="
+            f"\nRun average final results"
+            f"\n========================={s.ENDC}"
+            f"\n{metrics_join}\n"
+        )
