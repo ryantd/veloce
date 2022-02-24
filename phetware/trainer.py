@@ -30,12 +30,14 @@ class NeuralNetTrainer(object):
         callbacks=None,
         use_early_stopping=False,
         early_stopping_args=None,
+        shared_validation_dataset=None,
     ):
         self.model = module
         self.module_params = module_params
         self.ddp_options = ddp_options
         self.dataset = dataset
         self.dataset_options = dataset_options
+        self.shared_validation_dataset = shared_validation_dataset
 
         self.epochs = epochs
         self.batch_size = batch_size
@@ -83,6 +85,7 @@ class NeuralNetTrainer(object):
                 use_static_graph=self.use_static_graph,
                 use_early_stopping=self.use_early_stopping,
                 early_stopping_args=self.early_stopping_args,
+                shared_validation_dataset=self.shared_validation_dataset,
                 **self.module_params
             )
             try:

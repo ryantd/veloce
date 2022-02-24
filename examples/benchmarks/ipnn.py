@@ -13,6 +13,7 @@ def train_ipnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     datasets, feature_defs, torch_dataset_options = load_benchmark_dataset(
         feature_def_settings={"dnn": {"dense": True, "sparse": True}},
     )
+    train_ds, valid_ds = datasets
 
     trainer = NeuralNetTrainer(
         # module and dataset configs
@@ -23,16 +24,19 @@ def train_ipnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "use_outter": False,
             "dnn_activation": nn.Tanh,
             "dnn_dropout": 0.5,
+            "dnn_hidden_units": (200, 200, 200),
             "seed": rand_seed,
         },
-        dataset=datasets,
+        dataset=train_ds,
         dataset_options=torch_dataset_options,
+        shared_validation_dataset=valid_ds,
         # trainer configs
         epochs=20,
         batch_size=512,
         loss_fn=nn.BCELoss(),
         optimizer=torch.optim.Adam,
         optimizer_args={
+            "lr": 1e-4,
             "weight_decay": 1e-3,
         },
         metric_fns=[auroc],
@@ -45,10 +49,7 @@ def train_ipnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     results = trainer.run()
     pprint_results(results)
     """
-    optimizer=Adam
-    early_stopping patience=2
-    weight_decay=1e-3
-    valid/BCELoss: 0.49148	valid/auroc: 0.75238
+    valid/BCELoss avg: 0.49917	valid/auroc avg: 0.74640
     """
 
 

@@ -16,6 +16,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "fm": {"dense": True, "sparse": False},
         },
     )
+    train_ds, valid_ds = datasets
 
     trainer = NeuralNetTrainer(
         # module and dataset configs
@@ -23,19 +24,21 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         module_params={
             "dnn_feature_defs": feature_defs["dnn"],
             "linear_feature_defs": feature_defs["fm"],
-            "seed": rand_seed,
-            "output_fn": torch.sigmoid,
             "dnn_dropout": 0.5,
+            "dnn_hidden_units": (200, 200, 200),
             "use_fm": True,
+            "seed": rand_seed,
         },
-        dataset=datasets,
+        dataset=train_ds,
         dataset_options=torch_dataset_options,
+        shared_validation_dataset=valid_ds,
         # trainer configs
         epochs=20,
         batch_size=512,
         loss_fn=nn.BCELoss(),
         optimizer=torch.optim.Adam,
         optimizer_args={
+            "lr": 1e-4,
             "weight_decay": 1e-3,
         },
         metric_fns=[auroc],
@@ -48,10 +51,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     results = trainer.run()
     pprint_results(results)
     """
-    optimizer=Adam
-    early_stopping patience=2
-    weight_decay=1e-3
-    valid/BCELoss: 0.49278	valid/auroc: 0.75269
+    valid/BCELoss avg: 0.48819	valid/auroc avg: 0.75234
     """
 
 

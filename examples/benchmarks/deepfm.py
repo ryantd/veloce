@@ -13,10 +13,11 @@ def train_deepfm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     datasets, feature_defs, torch_dataset_options = load_benchmark_dataset(
         feature_def_settings={
             "fm_1": {"dense": True, "sparse": True},
-            "fm_2": {"dense": False, "sparse": True},
+            "fm_2": {"dense": True, "sparse": True},
             "dnn": {"dense": True, "sparse": True},
         },
     )
+    train_ds, valid_ds = datasets
 
     trainer = NeuralNetTrainer(
         # module and dataset configs
@@ -25,18 +26,20 @@ def train_deepfm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "fm_1_feature_defs": feature_defs["fm_1"],
             "fm_2_feature_defs": feature_defs["fm_2"],
             "dnn_feature_defs": feature_defs["dnn"],
-            "seed": rand_seed,
-            "output_fn": torch.sigmoid,
+            "dnn_hidden_units": (200, 200, 200),
             "dnn_dropout": 0.5,
+            "seed": rand_seed,
         },
-        dataset=datasets,
+        dataset=train_ds,
         dataset_options=torch_dataset_options,
+        shared_validation_dataset=valid_ds,
         # trainer configs
         epochs=20,
         batch_size=512,
         loss_fn=nn.BCELoss(),
         optimizer=torch.optim.Adam,
         optimizer_args={
+            "lr": 1e-4,
             "weight_decay": 1e-3,
         },
         metric_fns=[auroc],
@@ -49,10 +52,7 @@ def train_deepfm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     results = trainer.run()
     pprint_results(results)
     """
-    optimizer=Adam
-    early_stopping patience=2
-    weight_decay=1e-3
-    valid/BCELoss: 0.50389	valid/auroc: 0.73780
+    valid/BCELoss avg: 0.50362	valid/auroc avg: 0.73318
     """
 
 

@@ -35,7 +35,6 @@ class DeepFM(BaseModel):
         output_fn_args=None,
         device="cpu",
         init_std=1e-4,
-        **kwargs
     ):
         super(DeepFM, self).__init__(
             fm_1_feature_defs=fm_1_feature_defs,

@@ -35,7 +35,6 @@ class WideAndDeep(BaseModel):
         output_fn_args=None,
         device="cpu",
         init_std=1e-4,
-        **kwargs
     ):
         super(WideAndDeep, self).__init__(
             linear_feature_defs=linear_feature_defs,

@@ -36,12 +36,18 @@ class BaseTrainFn(object):
         self.device = train.torch.get_device()
         self.use_early_stopping = config.get("use_early_stopping", False)
         self.early_stopping_args = config.get("early_stopping_args", None) or {}
+        self.shared_validation_dataset_shard = config.get(
+            "shared_validation_dataset", None
+        )
 
         # dataset setup
         train_dataset_shard = train.get_dataset_shard("train")
         self.train_dataset_iterator = train_dataset_shard.iter_datasets()
         try:
-            validation_dataset_shard = train.get_dataset_shard("validation")
+            validation_dataset_shard = (
+                self.shared_validation_dataset_shard
+                or train.get_dataset_shard("validation")
+            )
             self.validation_dataset_iterator = validation_dataset_shard.iter_datasets()
         except:
             self.validation_dataset_iterator = None

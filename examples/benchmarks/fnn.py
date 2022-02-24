@@ -15,6 +15,7 @@ def train_fnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "dnn": {"dense": True, "sparse": True},
         },
     )
+    train_ds, valid_ds = datasets
 
     trainer = NeuralNetTrainer(
         # module and dataset configs
@@ -22,16 +23,19 @@ def train_fnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         module_params={
             "dnn_feature_defs": feature_defs["dnn"],
             "pre_trained_mode": True,
-            "seed": rand_seed,
             "dnn_dropout": 0.5,
+            "dnn_hidden_units": (200, 200, 200),
+            "seed": rand_seed,
         },
-        dataset=datasets,
+        dataset=train_ds,
         dataset_options=torch_dataset_options,
+        shared_validation_dataset=valid_ds,
         # trainer configs
         batch_size=512,
         loss_fn=nn.BCELoss(),
         optimizer=torch.optim.Adam,
         optimizer_args={
+            "lr": 1e-4,
             "weight_decay": 1e-3,
         },
         metric_fns=[auroc],
@@ -50,13 +54,7 @@ def train_fnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     )
     pprint_results(results)
     """
-    optimizer=Adam
-    early_stopping patience=2
-    valid/BCELoss: 0.50002	valid/auroc: 0.74771
-
-    optimizer=Adam
-    weight_decay=1e-3
-    valid/BCELoss: 0.49254	valid/auroc: 0.75292
+    valid/BCELoss avg: 0.50523	valid/auroc avg: 0.73582
     """
 
 

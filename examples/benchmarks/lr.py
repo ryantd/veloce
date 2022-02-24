@@ -15,6 +15,7 @@ def train_lr_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "linear": {"dense": True, "sparse": True},
         },
     )
+    train_ds, valid_ds = datasets
 
     trainer = NeuralNetTrainer(
         # module and dataset configs
@@ -23,8 +24,9 @@ def train_lr_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "linear_feature_defs": feature_defs["linear"],
             "seed": rand_seed,
         },
-        dataset=datasets,
+        dataset=train_ds,
         dataset_options=torch_dataset_options,
+        shared_validation_dataset=valid_ds,
         # trainer configs
         epochs=20,
         batch_size=512,

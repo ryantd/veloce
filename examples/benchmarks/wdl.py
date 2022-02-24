@@ -17,6 +17,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "linear": {"dense": True, "sparse": True},
         },
     )
+    train_ds, valid_ds = datasets
 
     trainer = NeuralNetTrainer(
         # module and dataset configs
@@ -24,12 +25,13 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         module_params={
             "dnn_feature_defs": feature_defs["dnn"],
             "linear_feature_defs": feature_defs["linear"],
-            "seed": rand_seed,
-            "output_fn": torch.sigmoid,
             "dnn_dropout": 0.5,
+            "dnn_hidden_units": (200, 200, 200),
+            "seed": rand_seed,
         },
-        dataset=datasets,
+        dataset=train_ds,
         dataset_options=torch_dataset_options,
+        shared_validation_dataset=valid_ds,
         # trainer configs
         epochs=20,
         batch_size=512,
@@ -41,7 +43,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
                 model_key="deep_model",
             ),
             dict(
-                cls=FTRL, args=dict(lr=4.25, weight_decay=1e-3), model_key="wide_model"
+                cls=FTRL, args=dict(lr=0.925, weight_decay=1e-3), model_key="wide_model"
             ),
         ),
         metric_fns=[auroc],
@@ -54,16 +56,7 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     results = trainer.run()
     pprint_results(results)
     """
-    optimizer=Adam
-    early_stopping patience=2
-    weight_decay=1e-3
-    valid/BCELoss: 0.49301	valid/auroc: 0.75244
-
-    optimizer=FTRL + Adam
-    early_stopping patience=2
-    weight_decay=1e-3
-    FTRL lr=4.25
-    valid/BCELoss: 0.50941	valid/auroc: 0.73046
+    valid/BCELoss avg: 0.50519	valid/auroc avg: 0.73093
     """
 
 

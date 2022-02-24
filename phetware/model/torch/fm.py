@@ -22,7 +22,6 @@ class FM(BaseModel):
         output_fn=torch.sigmoid,
         output_fn_args=None,
         init_std=1e-4,
-        **kwargs
     ):
         super(FM, self).__init__(
             fm_feature_defs=fm_feature_defs,

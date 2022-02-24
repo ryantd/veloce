@@ -59,6 +59,8 @@ def merge_results(
     result = dict(
         is_early_stopped=is_early_stopped, is_checkpoint_based=is_checkpoint_based
     )
+    if validation_result is None:
+        raise ValueError("Arg validation_result should be given")
     if train_result is None:
         train_result = dict()
     for k, v in train_result.items():
@@ -70,15 +72,22 @@ def merge_results(
     return result
 
 
-def pprint_results(run_results, use_style=True, print_interval=1):
+def pprint_results(
+    run_results,
+    use_style=True,
+    show_avg_results=True,
+    show_epoch_results=True,
+    show_post_analysis=True,
+    print_interval=1,
+):
     s = StyleCoder(use_style)
     is_es = False
     is_ckpt = False
-    avg_metrics = {}
     for run_idx, worker_results in enumerate(run_results):
         print(f"\n{s.BOLD}Run {run_idx}: {s.ENDC}")
         total = 0
         n_workers = len(worker_results)
+        avg_metrics = {}
         for worker_idx, results in enumerate(worker_results):
             if not len(results):
                 continue
@@ -92,11 +101,12 @@ def pprint_results(run_results, use_style=True, print_interval=1):
                 for k, v in results[-1].items():
                     avg_metrics[k] += v
             total = len(results)
-            print(
-                f"{s.BOLD}========================="
-                f"\nWorker {worker_idx} training results"
-                f"\n========================={s.ENDC}"
-            )
+            if show_epoch_results:
+                print(
+                    f"{s.BOLD}========================="
+                    f"\nWorker {worker_idx} training results"
+                    f"\n========================={s.ENDC}"
+                )
             for idx in range(print_interval - 1, total, print_interval):
                 val = results[idx]
                 if TIME_DIFF in val:
@@ -124,23 +134,24 @@ def pprint_results(run_results, use_style=True, print_interval=1):
             )
             es_indicator = " ES" if is_es else ""
             ckpt_indicator = " CKPT" if is_ckpt else ""
+            if show_post_analysis:
+                print(
+                    f"{s.BOLD}======================"
+                    f"\nWorker {worker_idx} post-analysis"
+                    f"\n======================{s.ENDC}"
+                    f"\n[epoch 1 {s.BOLD}→{s.ENDC} {total}{s.BOLDCYAN}"
+                    f"{ckpt_indicator}{es_indicator}{s.ENDC}]\t{acc_metrics_join}\n"
+                )
+        if show_avg_results:
+            metrics_join = []
+            for k, v in avg_metrics.items():
+                if k in [EARLY_STOPPED, CHECKPOINT_BASED, TIME_DIFF]:
+                    continue
+                metrics_join.append(f"{k} avg: {'%.5f' % (v / n_workers)}")
+            metrics_join = "\t".join(metrics_join)
             print(
-                f"{s.BOLD}======================"
-                f"\nWorker {worker_idx} post-analysis"
-                f"\n======================{s.ENDC}"
-                f"\n[epoch 1 {s.BOLD}→{s.ENDC} {total}{s.BOLDCYAN}"
-                f"{ckpt_indicator}{es_indicator}{s.ENDC}]\t{acc_metrics_join}\n"
+                f"{s.BOLD}========================="
+                f"\nRun average final results"
+                f"\n========================={s.ENDC}"
+                f"\n{metrics_join}\n"
             )
-
-        metrics_join = []
-        for k, v in avg_metrics.items():
-            if k in [EARLY_STOPPED, CHECKPOINT_BASED, TIME_DIFF]:
-                continue
-            metrics_join.append(f"{k} avg: {'%.5f' % (v / n_workers)}")
-        metrics_join = "\t".join(metrics_join)
-        print(
-            f"{s.BOLD}========================="
-            f"\nRun average final results"
-            f"\n========================={s.ENDC}"
-            f"\n{metrics_join}\n"
-        )

@@ -15,6 +15,7 @@ def train_fm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "fm": {"dense": True, "sparse": True},
         },
     )
+    train_ds, valid_ds = datasets
 
     trainer = NeuralNetTrainer(
         # module and dataset configs
@@ -23,8 +24,9 @@ def train_fm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
             "fm_feature_defs": feature_defs["fm"],
             "seed": rand_seed,
         },
-        dataset=datasets,
+        dataset=train_ds,
         dataset_options=torch_dataset_options,
+        shared_validation_dataset=valid_ds,
         # trainer configs
         epochs=20,
         batch_size=512,
@@ -39,7 +41,7 @@ def train_fm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     pprint_results(results)
     """
     optimizer=Adam
-    valid/BCELoss: 0.50188	valid/auroc: 0.74113
+    valid/BCELoss avg: 0.50461	valid/auroc avg: 0.73383
     """
 
 

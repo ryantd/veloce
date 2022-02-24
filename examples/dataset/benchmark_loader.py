@@ -1,15 +1,16 @@
 from phetware.preprocessing import DataLoader
 
-BENCHMARK_DATASET_DEFAULT = "examples/dataset/ctr/criteo_10k.txt"
+BENCHMARK_DATASET_DEFAULT = "examples/dataset/ctr/criteo_100k.txt"
 
 
 def load_benchmark_dataset(
     data_path=BENCHMARK_DATASET_DEFAULT,
     *,
     feature_def_settings=None,
-    valid_split_factor=0.8,
+    valid_split_factor=0.85,
     rand_seed=2021,
     embedding_dim=4,
+    separate_valid_dataset=True,
 ):
     if not feature_def_settings:
         raise ValueError("Arg feature_column_settings should be given")
@@ -32,4 +33,7 @@ def load_benchmark_dataset(
         k: dense_defs * int(v["dense"]) + sparse_defs * int(v["sparse"])
         for k, v in feature_def_settings.items()
     }
+    if separate_valid_dataset:
+        validation_ds = datasets.pop("validation")
+        return (datasets, validation_ds), feature_defs, torch_dataset_options
     return datasets, feature_defs, torch_dataset_options

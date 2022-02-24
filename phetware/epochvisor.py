@@ -1,9 +1,7 @@
 import time
 from collections import defaultdict
-from tkinter.tix import Tree
 
 import torch
-from torch.distributed.algorithms.join import Join
 import ray.train as train
 
 from .util import get_package_name, merge_results, get_type, get_func_name

@@ -35,7 +35,6 @@ class PNN(BaseModel):
         output_fn_args=None,
         device="cpu",
         init_std=1e-4,
-        **kwargs
     ):
         super(PNN, self).__init__(
             dnn_feature_defs=dnn_feature_defs, seed=seed, device=device
