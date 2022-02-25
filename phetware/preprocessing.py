@@ -141,6 +141,7 @@ class DataLoader(object):
         return self
 
     def split(self, valid_split_factor=0.8, return_type="shard_dict"):
+        self.valid_split_factor = valid_split_factor
         valid_idx = int(self.ds.count() * valid_split_factor)
         train_dataset, validation_dataset = self.ds.random_shuffle(
             seed=self.rand_seed
@@ -156,13 +157,34 @@ class DataLoader(object):
             "validation": self.validation_dataset_pipeline,
         }
 
+    def _patch_count_attr(self, opts):
+        opts.update(
+            {
+                "count": self.ds.count(),
+                "train_set_count": self.ds.count() * self.valid_split_factor,
+            }
+        )
+        return opts
+
     def gen_torch_dataset_options(self):
         feature_columns = getattr(self, f"{self.feat_order[0]}_feat_names") + getattr(
             self, f"{self.feat_order[1]}_feat_names"
         )
-        return {
-            "label_column": self.label_name,
-            "feature_columns": feature_columns,
-            "label_column_dtype": torch.float,
-            "feature_column_dtypes": [torch.float] * len(feature_columns),
-        }
+        return self._patch_count_attr(
+            {
+                "label_column": self.label_name,
+                "feature_columns": feature_columns,
+                "label_column_dtype": torch.float,
+                "feature_column_dtypes": [torch.float] * len(feature_columns),
+            }
+        )
+
+
+def gen_dataset_shards(dataset_pipeline, n_shards, locality_hints):
+    dataset_shards = [dict() for _ in range(n_shards)]
+    for k, v in dataset_pipeline.items():
+        shards = v.split(n_shards, equal=True, locality_hints=locality_hints)
+        assert len(shards) == n_shards
+        for i in range(len(shards)):
+            dataset_shards[i][k] = shards[i]
+    return dataset_shards

@@ -1,13 +1,52 @@
 import copy
 
-from ray.train import Trainer
+import ray
+from ray.train import Trainer as RayTrainer
 from ray.train.callbacks import JsonLoggerCallback, TBXLoggerCallback
 
 from phetware.train_fn import RecommendationFn
 from phetware.callback import EarlyStoppingCallback
+from phetware.heterogeneous import HeterogeneousStrategy, PSTrainer
 
 callback_mapping = {"json": JsonLoggerCallback, "tbx": TBXLoggerCallback}
 DefaultRun = {}
+
+
+class HostedTrainer(object):
+    def __init__(self, hetero_strategy, *, num_workers, use_gpu):
+        self.hetero_strategy = hetero_strategy
+        self.num_workers = num_workers
+        self.use_gpu = use_gpu
+        if self.hetero_strategy.use_raytrainer():
+            self.raytrainer = RayTrainer(
+                "torch", num_workers=self.num_workers, use_gpu=self.use_gpu
+            )
+        elif self.hetero_strategy.use_sync_ps():
+            self.pstrainer = PSTrainer(
+                num_workers=self.num_workers, use_gpu=self.use_gpu
+            )
+
+    def start(self):
+        if self.hetero_strategy.use_raytrainer():
+            self.raytrainer.start()
+
+    def run(self, **kwargs):
+        model = kwargs.pop("model")
+        if self.hetero_strategy.use_raytrainer():
+            result = self.raytrainer.run(train_func=RecommendationFn(model), **kwargs)
+        elif self.hetero_strategy.use_sync_ps():
+            result = self.pstrainer.run(
+                model=model, config=kwargs["config"], dataset=kwargs["dataset"]
+            )
+        else:
+            raise NotImplementedError
+        return result
+
+    def shutdown(self):
+        if self.hetero_strategy.use_raytrainer():
+            self.raytrainer.shutdown()
+        else:
+            ray.shutdown()
 
 
 class NeuralNetTrainer(object):
@@ -32,6 +71,7 @@ class NeuralNetTrainer(object):
         use_early_stopping=False,
         early_stopping_args=None,
         shared_validation_dataset=None,
+        heterogeneous_strategy=None,
     ):
         # current only support torch
         self.backend = backend
@@ -54,6 +94,7 @@ class NeuralNetTrainer(object):
         self.early_stopping_args = early_stopping_args
 
         self.callbacks = callbacks
+        self.hetero_strategy = heterogeneous_strategy or HeterogeneousStrategy()
         self.num_workers = num_workers
         self.use_gpu = use_gpu
 
@@ -74,7 +115,11 @@ class NeuralNetTrainer(object):
         results = []
         latest_ckpt = None
 
-        trainer = Trainer("torch", num_workers=self.num_workers, use_gpu=self.use_gpu)
+        trainer = HostedTrainer(
+            self.hetero_strategy,
+            num_workers=self.num_workers,
+            use_gpu=self.use_gpu,
+        )
         trainer.start()
         for addon in self.multi_runs:
             common_conf = dict(
@@ -103,14 +148,13 @@ class NeuralNetTrainer(object):
             if not self.use_early_stopping:
                 results.append(
                     trainer.run(
-                        train_func=RecommendationFn(self.model),
+                        model=self.model,
                         dataset=self.dataset,
                         callbacks=self.callbacks,
                         config=common_conf,
                         checkpoint=latest_ckpt,
                     )
                 )
-
             else:
                 # hacky solution on EarlyStopping
                 _es = EarlyStoppingCallback(trainer)
@@ -118,7 +162,7 @@ class NeuralNetTrainer(object):
                 _callbacks.append(_es)
                 try:
                     trainer.run(
-                        train_func=RecommendationFn(self.model),
+                        model=self.model,
                         dataset=self.dataset,
                         callbacks=_callbacks,
                         config=common_conf,

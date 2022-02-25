@@ -1,5 +1,7 @@
 import inspect
 
+import ray
+
 TIME_DIFF = "epoch_seconds"
 EARLY_STOPPED = "is_early_stopped"
 CHECKPOINT_BASED = "is_checkpoint_based"
@@ -49,6 +51,16 @@ def get_func_name(func):
     return func.__name__
 
 
+def inspect_func_args(config, in_func):
+    in_func_args = dict()
+    requires_arg = list(inspect.signature(in_func.__init__).parameters.keys())
+    requires_arg.pop(0)
+    for k, v in config.items():
+        if k in requires_arg:
+            in_func_args[k] = v
+    return in_func_args
+
+
 def merge_results(
     validation_result,
     train_result=None,
@@ -86,9 +98,9 @@ def pprint_results(
     for run_idx, worker_results in enumerate(run_results):
         print(f"\n{s.BOLD}Run {run_idx}: {s.ENDC}")
         total = 0
-        n_workers = len(worker_results)
+        n_workers = len(worker_results or [])
         avg_metrics = {}
-        for worker_idx, results in enumerate(worker_results):
+        for worker_idx, results in enumerate(worker_results or []):
             if not len(results):
                 continue
             time_diff = results[0].pop(TIME_DIFF)
@@ -155,3 +167,28 @@ def pprint_results(
                 f"\n========================={s.ENDC}"
                 f"\n{metrics_join}\n"
             )
+
+
+def ticks(iter):
+    ops = list(iter)
+    for resp in ops:
+        ray.get(resp)
+
+
+def calculate_batches(subset_cnt, size, n):
+    batches = subset_cnt / size / n
+    if batches.is_integer():
+        return batches
+    else:
+        return int(batches) + 1
+
+
+def get_batches(config, n_workers):
+    return calculate_batches(
+        config["dataset_options"]["train_set_count"], config["batch_size"], n_workers
+    ), calculate_batches(
+        config["dataset_options"]["count"]
+        - config["dataset_options"]["train_set_count"],
+        config["batch_size"],
+        n_workers,
+    )

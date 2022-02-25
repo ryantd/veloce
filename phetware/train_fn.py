@@ -1,11 +1,9 @@
-import inspect
-
 import torch
 import torch.nn as nn
 import torchmetrics
 import ray.train as train
 
-from phetware.util import get_package_name
+from phetware.util import get_package_name, inspect_func_args
 from phetware.inputs import rebuild_feature_values, find_feature_values
 from phetware.model.torch import (
     WideAndDeep as _WideAndDeep,
@@ -18,6 +16,21 @@ from phetware import Epochvisor
 
 class BaseTrainFn(object):
     def __call__(self, config):
+        self.set_config(config)
+        # dataset setup
+        train_dataset_shard = train.get_dataset_shard("train")
+        self.train_dataset_iterator = train_dataset_shard.iter_datasets()
+        try:
+            validation_dataset_shard = (
+                self.shared_validation_dataset_shard
+                or train.get_dataset_shard("validation")
+            )
+            self.validation_dataset_iterator = validation_dataset_shard.iter_datasets()
+        except:
+            self.validation_dataset_iterator = None
+
+    def set_config(self, config):
+        # basic configs setup
         self.dataset_options = config.get("dataset_options", None)
         self.seed = config.get("seed", 1024)
         self.epochs = config.get("epochs", 10)
@@ -32,42 +45,48 @@ class BaseTrainFn(object):
         self.init_std = config.get("init_std", 0.0001)
         self.ddp_options = config.get("ddp_options", None) or {}
         self.use_static_graph = config.get("use_static_graph", False)
-        self.checkpoint = train.load_checkpoint() or None
-        self.device = train.torch.get_device()
         self.use_early_stopping = config.get("use_early_stopping", False)
         self.early_stopping_args = config.get("early_stopping_args", None) or {}
         self.shared_validation_dataset_shard = config.get(
             "shared_validation_dataset", None
         )
-
-        # dataset setup
-        train_dataset_shard = train.get_dataset_shard("train")
-        self.train_dataset_iterator = train_dataset_shard.iter_datasets()
         try:
-            validation_dataset_shard = (
-                self.shared_validation_dataset_shard
-                or train.get_dataset_shard("validation")
-            )
-            self.validation_dataset_iterator = validation_dataset_shard.iter_datasets()
+            self.checkpoint = train.load_checkpoint() or None
+            self.device = train.torch.get_device()
         except:
-            self.validation_dataset_iterator = None
+            self.checkpoint = None
+            self.device = config.get("device", "cpu")
 
-    def setup_model(self, model):
-        self.model = model
+    def setup_model(
+        self, model_args, model=None, enable_optimizer=True, enable_ddp=True
+    ):
+        # model setup
+        if (not hasattr(self, "model") or self.model is None) and model is not None:
+            self.model = model
+        if enable_ddp:
+            self.model = train.torch.prepare_model(
+                model=self.model(**model_args), ddp_kwargs=self.ddp_options
+            )
+        else:
+            self.model = self.model(**model_args)
         if self.use_static_graph:
             self.model._set_static_graph()
-        if get_package_name(self.optimizer) == "torch" or (
-            get_package_name(self.optimizer) == "phetware"
-            and type(self.optimizer).__name__ != "OptimizerStack"
-        ):
-            self.optimizer = self.optimizer(model.parameters(), **self.optimizer_args)
-        elif type(self.optimizer).__name__ == "OptimizerStack":
-            self.optimizer.compile(self.model.module)
-        else:
-            raise ValueError("optimizer must be given and valid")
-        self.setup_epv()
         if self.summary_nn_arch:
-            print(model)
+            print(self.model)
+
+        if enable_optimizer:
+            # optimizer setup
+            if get_package_name(self.optimizer) == "torch" or (
+                get_package_name(self.optimizer) == "phetware"
+                and type(self.optimizer).__name__ != "OptimizerStack"
+            ):
+                self.optimizer = self.optimizer(
+                    self.model.parameters(), **self.optimizer_args
+                )
+            elif type(self.optimizer).__name__ == "OptimizerStack":
+                self.optimizer.compile(self.model.module if enable_ddp else self.model)
+            else:
+                raise ValueError("optimizer must be given and valid")
 
     def setup_epv(self):
         self.epv = Epochvisor(
@@ -96,18 +115,12 @@ class RecommendationFn(BaseTrainFn):
 
     def __call__(self, config):
         super(RecommendationFn, self).__call__(config)
-        model_config = dict()
-        requires_arg = list(inspect.signature(self.model.__init__).parameters.keys())
-        requires_arg.pop(0)
-        for k, v in config.items():
-            if find_feature_values(v):
-                v = rebuild_feature_values(v)
-            if k in requires_arg:
-                model_config[k] = v
-        model = train.torch.prepare_model(
-            model=self.model(**model_config), ddp_kwargs=self.ddp_options
-        )
-        self.setup_model(model=model)
+        for k in config.keys():
+            if find_feature_values(config[k]):
+                config[k] = rebuild_feature_values(config[k])
+        model_args = inspect_func_args(config, self.model)
+        self.setup_model(model_args=model_args)
+        self.setup_epv()
         return self.run_epochs()
 
 

@@ -28,7 +28,7 @@ class LossMetricAccumulator(object):
                     y.cpu().data.numpy(), pred.cpu().data.numpy()
                 )
 
-    def result_gen(self, num_batches, with_latest_loss=False):
+    def gen_result(self, num_batches, with_latest_loss=False):
         results = {get_type(self.loss_fn): self.loss / num_batches}
         # torchmetrics module compute and reset
         for fn in self.metric_fns:
@@ -166,7 +166,7 @@ class Epochvisor(object):
         self.model.train()
         num_batches = 0
         lma = LossMetricAccumulator(loss_fn=self.loss_fn, metric_fns=self.metric_fns)
-        for _, (X, y) in enumerate(train_iterable_ds):
+        for X, y in train_iterable_ds:
             X = X.to(self.device)
             y = y.to(self.device)
             pred = self.model(X)
@@ -182,20 +182,20 @@ class Epochvisor(object):
             # metrics part
             num_batches += 1
             lma.acc(pred=pred, y=y)
-        return lma.result_gen(num_batches=num_batches)
+        return lma.gen_result(num_batches=num_batches)
 
     def validate_epoch(self, validation_iterable_ds, with_latest_loss=False):
         self.model.eval()
         num_batches = 0
         lma = LossMetricAccumulator(loss_fn=self.loss_fn, metric_fns=self.metric_fns)
         with torch.no_grad():
-            for _, (X, y) in enumerate(validation_iterable_ds):
+            for X, y in validation_iterable_ds:
                 X = X.to(self.device)
                 y = y.to(self.device)
                 pred = self.model(X)
                 # metrics part
                 num_batches += 1
                 lma.acc(pred=pred, y=y)
-        return lma.result_gen(
+        return lma.gen_result(
             num_batches=num_batches, with_latest_loss=with_latest_loss
         )
