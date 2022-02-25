@@ -33,13 +33,13 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         dataset_options=torch_dataset_options,
         shared_validation_dataset=valid_ds,
         # trainer configs
-        epochs=20,
+        epochs=50,
         batch_size=512,
         loss_fn=nn.BCELoss(),
         optimizer=OptimizerStack(
             dict(
                 cls=torch.optim.Adam,
-                args=dict(weight_decay=1e-3),
+                args=dict(weight_decay=1e-3, lr=1e-4),
                 model_key="deep_model",
             ),
             dict(
@@ -56,7 +56,8 @@ def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     results = trainer.run()
     pprint_results(results)
     """
-    valid/BCELoss avg: 0.50519	valid/auroc avg: 0.73093
+    epochs 36 ES
+    valid/BCELoss avg: 0.50481	valid/auroc avg: 0.73152
     """
 
 

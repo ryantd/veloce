@@ -49,12 +49,13 @@ def train_fnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     results = trainer.run(
         multi_runs=[
             {"epochs": 10},
-            {"epochs": 10, "module_params": {"pre_trained_mode": False}},
+            {"epochs": 40, "module_params": {"pre_trained_mode": False}},
         ]
     )
     pprint_results(results)
     """
-    valid/BCELoss avg: 0.50523	valid/auroc avg: 0.73582
+    epochs 10+19 ES
+    valid/BCELoss avg: 0.49473	valid/auroc avg: 0.74728
     """
 
 

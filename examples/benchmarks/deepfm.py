@@ -34,7 +34,7 @@ def train_deepfm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         dataset_options=torch_dataset_options,
         shared_validation_dataset=valid_ds,
         # trainer configs
-        epochs=20,
+        epochs=50,
         batch_size=512,
         loss_fn=nn.BCELoss(),
         optimizer=torch.optim.Adam,
@@ -52,7 +52,8 @@ def train_deepfm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
     results = trainer.run()
     pprint_results(results)
     """
-    valid/BCELoss avg: 0.50362	valid/auroc avg: 0.73318
+    epochs 50
+    valid/BCELoss avg: 0.49766	valid/auroc avg: 0.73852
     """
 
 
