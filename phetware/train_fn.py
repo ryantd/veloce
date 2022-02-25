@@ -6,7 +6,7 @@ import torchmetrics
 import ray.train as train
 
 from phetware.util import get_package_name
-from phetware.inputs import reformat_input_features, is_feature_defs
+from phetware.inputs import rebuild_feature_values, find_feature_values
 from phetware.model.torch import (
     WideAndDeep as _WideAndDeep,
     DeepFM as _DeepFM,
@@ -18,7 +18,7 @@ from phetware import Epochvisor
 
 class BaseTrainFn(object):
     def __call__(self, config):
-        self.torch_dataset_options = config.get("torch_dataset_options", None)
+        self.dataset_options = config.get("dataset_options", None)
         self.seed = config.get("seed", 1024)
         self.epochs = config.get("epochs", 10)
         self.batch_size = config.get("batch_size", 256)
@@ -74,7 +74,7 @@ class BaseTrainFn(object):
             epochs=self.epochs,
             train_dataset_iter=self.train_dataset_iterator,
             validation_dataset_iter=self.validation_dataset_iterator,
-            dataset_options=self.torch_dataset_options,
+            dataset_options=self.dataset_options,
             batch_size=self.batch_size,
             model=self.model,
             loss_fn=self.loss_fn,
@@ -90,29 +90,29 @@ class BaseTrainFn(object):
         return self.epv.run_epochs()
 
 
-class Generic(BaseTrainFn):
+class RecommendationFn(BaseTrainFn):
     def __init__(self, model):
         self.model = model
 
-    def __call__(self, origin_config):
-        super(Generic, self).__call__(origin_config)
-        config = dict()
+    def __call__(self, config):
+        super(RecommendationFn, self).__call__(config)
+        model_config = dict()
         requires_arg = list(inspect.signature(self.model.__init__).parameters.keys())
         requires_arg.pop(0)
-        for k, v in origin_config.items():
-            if is_feature_defs(v):
-                v = reformat_input_features(v)
+        for k, v in config.items():
+            if find_feature_values(v):
+                v = rebuild_feature_values(v)
             if k in requires_arg:
-                config[k] = v
+                model_config[k] = v
         model = train.torch.prepare_model(
-            model=self.model(**config), ddp_kwargs=self.ddp_options
+            model=self.model(**model_config), ddp_kwargs=self.ddp_options
         )
         self.setup_model(model=model)
         return self.run_epochs()
 
 
 # native train fns
-WideAndDeep = Generic(_WideAndDeep)
-DeepFM = Generic(_DeepFM)
-PNN = Generic(_PNN)
-FNN = Generic(_FNN)
+WideAndDeep = RecommendationFn(_WideAndDeep)
+DeepFM = RecommendationFn(_DeepFM)
+PNN = RecommendationFn(_PNN)
+FNN = RecommendationFn(_FNN)

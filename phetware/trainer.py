@@ -3,7 +3,7 @@ import copy
 from ray.train import Trainer
 from ray.train.callbacks import JsonLoggerCallback, TBXLoggerCallback
 
-from phetware.train_fn import Generic
+from phetware.train_fn import RecommendationFn
 from phetware.callback import EarlyStoppingCallback
 
 callback_mapping = {"json": JsonLoggerCallback, "tbx": TBXLoggerCallback}
@@ -23,6 +23,7 @@ class NeuralNetTrainer(object):
         metric_fns,
         num_workers,
         use_gpu,
+        backend="torch",
         epochs=0,
         use_static_graph=False,
         optimizer_args=None,
@@ -32,6 +33,9 @@ class NeuralNetTrainer(object):
         early_stopping_args=None,
         shared_validation_dataset=None,
     ):
+        # current only support torch
+        self.backend = backend
+
         self.model = module
         self.module_params = module_params
         self.ddp_options = ddp_options
@@ -60,7 +64,7 @@ class NeuralNetTrainer(object):
 
     def run(self, multi_runs=None, runs_mode="sync", use_checkpoint=False):
         if runs_mode != "sync":
-            raise ValueError("Arg run_mode not support non-sync")
+            raise ValueError("Arg run_mode current not support non-sync")
 
         if multi_runs is None:
             self.multi_runs = [DefaultRun]
@@ -72,8 +76,8 @@ class NeuralNetTrainer(object):
 
         trainer = Trainer("torch", num_workers=self.num_workers, use_gpu=self.use_gpu)
         trainer.start()
-        for addons in self.multi_runs:
-            run_configs = dict(
+        for addon in self.multi_runs:
+            common_conf = dict(
                 epochs=self.epochs,
                 batch_size=self.batch_size,
                 loss_fn=self.loss_fn,
@@ -81,7 +85,7 @@ class NeuralNetTrainer(object):
                 optimizer_args=self.optimizer_args,
                 metric_fns=self.metric_fns,
                 ddp_options=self.ddp_options,
-                torch_dataset_options=self.dataset_options,
+                dataset_options=self.dataset_options,
                 use_static_graph=self.use_static_graph,
                 use_early_stopping=self.use_early_stopping,
                 early_stopping_args=self.early_stopping_args,
@@ -89,20 +93,20 @@ class NeuralNetTrainer(object):
                 **self.module_params
             )
             try:
-                addons_module_params = addons.pop("module_params")
+                addon_module_params = addon.pop("module_params")
             except:
-                addons_module_params = {}
-            run_configs.update(addons)
-            run_configs.update(addons_module_params)
+                addon_module_params = {}
+            common_conf.update(addon)
+            common_conf.update(addon_module_params)
 
             # early stopping part
             if not self.use_early_stopping:
                 results.append(
                     trainer.run(
-                        train_func=Generic(self.model),
+                        train_func=RecommendationFn(self.model),
                         dataset=self.dataset,
                         callbacks=self.callbacks,
-                        config=run_configs,
+                        config=common_conf,
                         checkpoint=latest_ckpt,
                     )
                 )
@@ -114,10 +118,10 @@ class NeuralNetTrainer(object):
                 _callbacks.append(_es)
                 try:
                     trainer.run(
-                        train_func=Generic(self.model),
+                        train_func=RecommendationFn(self.model),
                         dataset=self.dataset,
                         callbacks=_callbacks,
-                        config=run_configs,
+                        config=common_conf,
                         checkpoint=latest_ckpt,
                     )
                 except:

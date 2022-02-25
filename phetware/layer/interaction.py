@@ -58,11 +58,11 @@ class InnerProduct(nn.Module):
         return inner_product
 
 
-class OutterProduct(nn.Module):
+class OuterProduct(nn.Module):
     def __init__(
         self, field_size, embedding_size, kernel_type="mat", seed=1024, device="cpu"
     ):
-        super(OutterProduct, self).__init__()
+        super(OuterProduct, self).__init__()
         self.kernel_type = kernel_type
 
         num_inputs = field_size

@@ -12,7 +12,8 @@ from phetware.inputs import (
 class FM(BaseModel):
     def __init__(
         self,
-        fm_feature_defs=None,
+        dense_feature_defs=None,
+        sparse_feature_defs=None,
         k_factor=10,
         l2_reg_fm=1e-3,
         l2_reg_embedding=1e-3,
@@ -23,20 +24,18 @@ class FM(BaseModel):
         output_fn_args=None,
         init_std=1e-4,
     ):
-        super(FM, self).__init__(
-            fm_feature_defs=fm_feature_defs,
-            seed=seed,
-            device=device,
-        )
+        super(FM, self).__init__(seed=seed, device=device)
+        self.dense_defs = dense_feature_defs
+        self.sparse_defs = sparse_feature_defs
         self.embedding_layer = embedding_dict_gen(
-            self.fds.fm_defs_sparse,
+            sparse_feature_defs=self.sparse_defs,
             init_std=init_std,
             sparse=False,
             device=device,
         )
         self.fm = FMNative(
-            feature_def_dims=sum(fc.dimension for fc in self.fds.fm_defs_dense)
-            + sum(fc.embedding_dim for fc in self.fds.fm_defs_sparse),
+            feature_def_dims=sum(fc.dimension for fc in self.dense_defs)
+            + sum(fc.embedding_dim for fc in self.sparse_defs),
             k_factor=k_factor,
             dropout_rate=fm_dropout,
             init_std=init_std,
@@ -46,14 +45,12 @@ class FM(BaseModel):
         )
         self.add_regularization_weight(self.fm.parameters(), l2=l2_reg_fm)
         self.output = OutputLayer(output_fn=output_fn, output_fn_args=output_fn_args)
-        self.to(device)
 
     def forward(self, X):
         dense_vals, sparse_embs = collect_inputs_and_embeddings(
             X,
-            sparse_feature_defs=self.fds.fm_defs_sparse,
-            dense_feature_defs=self.fds.fm_defs_dense,
-            feature_name_to_index=self.feature_name_to_index,
+            sparse_feature_defs=self.sparse_defs,
+            dense_feature_defs=self.dense_defs,
             embedding_layer_def=self.embedding_layer,
         )
         logit = self.fm(concat_inputs(sparse_embs, dense_vals))

@@ -80,21 +80,20 @@ class LR(nn.Module):
 
 
 def train_lr_dist(num_workers=2, use_gpu=False, rand_seed=2021):
-    dataloader = DataLoader("examples/dataset/ctr/criteo_10k.txt")
+    dataloader = DataLoader("examples/dataset/ctr/criteo_100k.txt")
     dataloader = (
         dataloader.set_label_column(label_name="label")
         .set_dense_features(feat_names=[f"I{i}" for i in range(1, 14)])
         .set_sparse_features(
             feat_names=[f"C{i}" for i in range(1, 27)], embedding_dim=1
         )
+        # this order should follow the data file
+        .set_features_order(order=("dense", "sparse"))
     )
     datasets = dataloader.split()
     dense_defs = dataloader.dense_defs
     sparse_defs = dataloader.sparse_defs
-    torch_dataset_options = dataloader.gen_torch_dataset_options(
-        # this order should follow the data file
-        order=("dense", "sparse")
-    )
+    torch_dataset_options = dataloader.gen_torch_dataset_options()
 
     # dense_defs is like,
     # [{'name': 'I1', 'dimension': 1.0, 'dtype': 'float32', 'column_idx': 1.0,

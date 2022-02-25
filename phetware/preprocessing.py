@@ -65,6 +65,7 @@ class DataLoader(object):
             convert_options=ConvertOptions(strings_can_be_null=strings_can_be_null),
         )
         self.rand_seed = rand_seed
+        self.feat_order = ("dense", "sparse")
 
     def set_sparse_features(
         self,
@@ -86,14 +87,17 @@ class DataLoader(object):
             self.ds = self.ds.map_batches(
                 LabelEncoder(self.sparse_feat_names), batch_format=batch_format
             )
-        sparse_defs_raw = self.ds.map_batches(
-            SparseFeatureDef(
-                self.sparse_feat_names,
-                embedding_dim=embedding_dim,
-            ),
-            batch_format=batch_format,
+        self.sparse_defs = (
+            self.ds.map_batches(
+                SparseFeatureDef(
+                    self.sparse_feat_names,
+                    embedding_dim=embedding_dim,
+                ),
+                batch_format=batch_format,
+            )
+            .to_pandas()
+            .to_dict("records")
         )
-        self.sparse_defs = sparse_defs_raw.to_pandas().to_dict("records")
         return self
 
     def set_dense_features(
@@ -116,15 +120,24 @@ class DataLoader(object):
             self.ds = self.ds.map_batches(
                 MinMaxScaler(self.dense_feat_names), batch_format=batch_format
             )
-        dense_defs_raw = self.ds.map_batches(
-            DenseFeatureDef(self.dense_feat_names, dimension=dim),
-            batch_format=batch_format,
+        self.dense_defs = (
+            self.ds.map_batches(
+                DenseFeatureDef(self.dense_feat_names, dimension=dim),
+                batch_format=batch_format,
+            )
+            .to_pandas()
+            .to_dict("records")
         )
-        self.dense_defs = dense_defs_raw.to_pandas().to_dict("records")
         return self
 
     def set_label_column(self, label_name):
         self.label_name = label_name
+        return self
+
+    def set_features_order(self, order):
+        if not order or not all([o in {"dense", "sparse"} for o in order]):
+            raise ValueError("Arg order should be given or invalid")
+        self.feat_order = order
         return self
 
     def split(self, valid_split_factor=0.8, return_type="shard_dict"):
@@ -143,11 +156,9 @@ class DataLoader(object):
             "validation": self.validation_dataset_pipeline,
         }
 
-    def gen_torch_dataset_options(self, order):
-        if not order or not all([o in {"dense", "sparse"} for o in order]):
-            raise ValueError("Arg order should be given or invalid")
-        feature_columns = getattr(self, f"{order[0]}_feat_names") + getattr(
-            self, f"{order[1]}_feat_names"
+    def gen_torch_dataset_options(self):
+        feature_columns = getattr(self, f"{self.feat_order[0]}_feat_names") + getattr(
+            self, f"{self.feat_order[1]}_feat_names"
         )
         return {
             "label_column": self.label_name,

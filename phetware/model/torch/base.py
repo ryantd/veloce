@@ -1,12 +1,7 @@
 import torch
 import torch.nn as nn
 
-from phetware.inputs import (
-    embedding_dict_gen,
-    build_feature_named_index_mapping,
-    collect_inputs_and_embeddings,
-)
-from phetware.feature_column import FeatureDefSet
+from phetware.inputs import embedding_dict_gen, collect_inputs_and_embeddings
 
 
 class BaseModel(nn.Module):
@@ -15,17 +10,6 @@ class BaseModel(nn.Module):
         torch.manual_seed(kwargs["seed"])
         self.device = kwargs["device"]
         self.regularization_weight = []
-        del kwargs["seed"]
-        del kwargs["device"]
-
-        self.fds = FeatureDefSet(kwargs)
-        self.fds.sorter()
-
-        # produce mapping from feature names to columns index
-        self.feature_name_to_index = build_feature_named_index_mapping(
-            self.fds.all_defs
-        )
-
         self.to(self.device)
 
     def add_regularization_weight(self, weight_list, l1=0.0, l2=0.0):
@@ -58,12 +42,10 @@ class Linear(nn.Module):
         self,
         sparse_feature_defs,
         dense_feature_defs,
-        feature_named_index_mapping,
         init_std=0.0001,
         device="cpu",
     ):
         super(Linear, self).__init__()
-        self.feature_name_to_index = feature_named_index_mapping
         self.device = device
         self.sparse_feature_defs = sparse_feature_defs
         self.dense_feature_defs = dense_feature_defs
@@ -85,7 +67,6 @@ class Linear(nn.Module):
             X,
             sparse_feature_defs=self.sparse_feature_defs,
             dense_feature_defs=self.dense_feature_defs,
-            feature_name_to_index=self.feature_name_to_index,
             embedding_layer_def=self.linear_embedding_dict,
         )
 

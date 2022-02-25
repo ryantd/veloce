@@ -10,18 +10,15 @@ from examples.dataset import load_benchmark_dataset
 
 
 def train_lr_dist(num_workers=2, use_gpu=False, rand_seed=2021):
-    datasets, feature_defs, torch_dataset_options = load_benchmark_dataset(
-        feature_def_settings={
-            "linear": {"dense": True, "sparse": True},
-        },
-    )
+    datasets, feature_defs, torch_dataset_options = load_benchmark_dataset()
     train_ds, valid_ds = datasets
 
     trainer = NeuralNetTrainer(
         # module and dataset configs
         module=LR,
         module_params={
-            "linear_feature_defs": feature_defs["linear"],
+            "dense_feature_defs": feature_defs["dense"],
+            "sparse_feature_defs": feature_defs["sparse"],
             "seed": rand_seed,
         },
         dataset=train_ds,
@@ -32,10 +29,7 @@ def train_lr_dist(num_workers=2, use_gpu=False, rand_seed=2021):
         batch_size=512,
         loss_fn=nn.BCELoss(),
         optimizer=FTRL,
-        optimizer_args={
-            "lr": 0.925,
-            "weight_decay": 1e-3
-        },
+        optimizer_args={"lr": 0.925, "weight_decay": 1e-3},
         metric_fns=[auroc],
         use_early_stopping=True,
         early_stopping_args={"patience": 2},

@@ -10,17 +10,16 @@ from examples.dataset import load_benchmark_dataset
 
 
 def train_opnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
-    datasets, feature_defs, torch_dataset_options = load_benchmark_dataset(
-        feature_def_settings={"dnn": {"dense": True, "sparse": True}},
-    )
+    datasets, feature_defs, torch_dataset_options = load_benchmark_dataset()
     train_ds, valid_ds = datasets
 
     trainer = NeuralNetTrainer(
         # module and dataset configs
         module=PNN,
         module_params={
-            "dnn_feature_defs": feature_defs["dnn"],
-            "use_outter": True,
+            "dense_feature_defs": feature_defs["dense"],
+            "sparse_feature_defs": feature_defs["sparse"],
+            "use_outer": True,
             "use_inner": False,
             "dnn_dropout": 0.5,
             "dnn_hidden_units": (200, 200, 200),

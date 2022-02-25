@@ -15,9 +15,8 @@ class DeepFM(BaseModel):
     def __init__(
         self,
         # feature_defs
-        fm_1_feature_defs=None,
-        fm_2_feature_defs=None,
-        dnn_feature_defs=None,
+        dense_feature_defs=None,
+        sparse_feature_defs=None,
         # fm related
         use_fm=True,
         l2_reg_fm_1=1e-3,
@@ -36,22 +35,17 @@ class DeepFM(BaseModel):
         device="cpu",
         init_std=1e-4,
     ):
-        super(DeepFM, self).__init__(
-            fm_1_feature_defs=fm_1_feature_defs,
-            fm_2_feature_defs=fm_2_feature_defs,
-            dnn_feature_defs=dnn_feature_defs,
-            seed=seed,
-            device=device,
-        )
-        self.use_dnn = len(dnn_feature_defs) > 0 and len(dnn_hidden_units) > 0
+        super(DeepFM, self).__init__(seed=seed, device=device)
+        self.dense_defs = dense_feature_defs
+        self.sparse_defs = sparse_feature_defs
+        self.use_dnn = len(dnn_hidden_units) > 0
         self.use_fm = use_fm
 
         # fm layers setup
         if self.use_fm:
             self.fm_1 = Linear(
-                sparse_feature_defs=self.fds.fm_1_defs_sparse,
-                dense_feature_defs=self.fds.fm_1_defs_dense,
-                feature_named_index_mapping=self.feature_name_to_index,
+                sparse_feature_defs=self.sparse_defs,
+                dense_feature_defs=self.dense_defs,
                 device=device,
             )
             self.add_regularization_weight(self.fm_1.parameters(), l2=l2_reg_fm_1)
@@ -59,7 +53,7 @@ class DeepFM(BaseModel):
             self.fm_2 = FM()
             # fm_2 embedding layer
             self.fm_2_embedding_layer = embedding_dict_gen(
-                self.fds.fm_2_defs_sparse,
+                self.sparse_defs,
                 init_std=init_std,
                 sparse=False,
                 device=device,
@@ -72,7 +66,7 @@ class DeepFM(BaseModel):
         if self.use_dnn:
             # embedding layer
             self.dnn_embedding_layer = embedding_dict_gen(
-                self.fds.dnn_defs_sparse, init_std=init_std, sparse=False, device=device
+                self.sparse_defs, init_std=init_std, sparse=False, device=device
             )
             self.add_regularization_weight(
                 self.dnn_embedding_layer.parameters(), l2=l2_reg_embedding
@@ -80,8 +74,8 @@ class DeepFM(BaseModel):
 
             self.dnn = DNN(
                 compute_inputs_dim(
-                    sparse_feature_defs=self.fds.dnn_defs_sparse,
-                    dense_feature_defs=self.fds.dnn_defs_dense,
+                    sparse_feature_defs=self.sparse_defs,
+                    dense_feature_defs=self.dense_defs,
                 ),
                 dnn_hidden_units,
                 activation=dnn_activation,
@@ -106,7 +100,6 @@ class DeepFM(BaseModel):
 
         # output layer setup
         self.output = OutputLayer(output_fn=output_fn, output_fn_args=output_fn_args)
-        self.to(device)
 
     def forward(self, X):
         if self.use_fm:
@@ -115,8 +108,7 @@ class DeepFM(BaseModel):
             # fm_2
             _, fm_2_sparse_embs = collect_inputs_and_embeddings(
                 X,
-                sparse_feature_defs=self.fds.fm_2_defs_sparse,
-                feature_name_to_index=self.feature_name_to_index,
+                sparse_feature_defs=self.sparse_defs,
                 embedding_layer_def=self.fm_2_embedding_layer,
             )
             fm_2_input = torch.cat(fm_2_sparse_embs, dim=1)
@@ -126,9 +118,8 @@ class DeepFM(BaseModel):
         if self.use_dnn:
             dnn_dense_vals, dnn_sparse_embs = collect_inputs_and_embeddings(
                 X,
-                sparse_feature_defs=self.fds.dnn_defs_sparse,
-                dense_feature_defs=self.fds.dnn_defs_dense,
-                feature_name_to_index=self.feature_name_to_index,
+                sparse_feature_defs=self.sparse_defs,
+                dense_feature_defs=self.dense_defs,
                 embedding_layer_def=self.dnn_embedding_layer,
             )
             dnn_input = concat_inputs(dnn_sparse_embs, dnn_dense_vals)

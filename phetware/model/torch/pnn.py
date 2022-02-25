@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
 
-from phetware.layer import DNN, OutputLayer, InnerProduct, OutterProduct
+from phetware.layer import DNN, OutputLayer, InnerProduct, OuterProduct
 from phetware.inputs import (
     concat_inputs,
     compute_inputs_dim,
@@ -16,11 +16,12 @@ class PNN(BaseModel):
     def __init__(
         self,
         # feature_defs
-        dnn_feature_defs=None,
+        dense_feature_defs=None,
+        sparse_feature_defs=None,
         # specific config
         use_inner=True,
-        use_outter=False,
-        outter_kernel_type="mat",
+        use_outer=False,
+        outer_kernel_type="mat",
         embedding_size=4,
         # dnn related
         dnn_hidden_units=(256, 128),
@@ -36,20 +37,20 @@ class PNN(BaseModel):
         device="cpu",
         init_std=1e-4,
     ):
-        super(PNN, self).__init__(
-            dnn_feature_defs=dnn_feature_defs, seed=seed, device=device
-        )
-        if outter_kernel_type not in ["mat", "vec", "num"]:
+        super(PNN, self).__init__(seed=seed, device=device)
+        if outer_kernel_type not in ["mat", "vec", "num"]:
             raise ValueError("Arg kernel_type must be mat, vec or num")
 
-        self.use_dnn = len(dnn_feature_defs) > 0 and len(dnn_hidden_units) > 0
+        self.dense_defs = dense_feature_defs
+        self.sparse_defs = sparse_feature_defs
+        self.use_dnn = len(dnn_hidden_units) > 0
         self.use_inner = use_inner
-        self.use_outter = use_outter
-        self.outter_kernel_type = outter_kernel_type
+        self.use_outer = use_outer
+        self.outer_kernel_type = outer_kernel_type
         self.embedding_size = embedding_size
 
         product_out_dim = 0
-        inputs_dim = compute_inputs_dim(self.fds.dnn_defs_sparse, feature_group=True)
+        inputs_dim = compute_inputs_dim(self.sparse_defs, feature_group=True)
         num_pairs = int(inputs_dim * (inputs_dim - 1) / 2)
 
         # product layer setup
@@ -57,12 +58,12 @@ class PNN(BaseModel):
             product_out_dim += num_pairs
             self.inner_product = InnerProduct(device=device)
 
-        if self.use_outter:
+        if self.use_outer:
             product_out_dim += num_pairs
-            self.outter_product = OutterProduct(
+            self.outer_product = OuterProduct(
                 inputs_dim,
                 self.embedding_size,
-                kernel_type=self.outter_kernel_type,
+                kernel_type=self.outer_kernel_type,
                 device=device,
             )
 
@@ -70,7 +71,7 @@ class PNN(BaseModel):
         if self.use_dnn:
             # embedding layer
             self.dnn_embedding_layer = embedding_dict_gen(
-                self.fds.dnn_defs_sparse, init_std=init_std, sparse=False, device=device
+                self.sparse_defs, init_std=init_std, sparse=False, device=device
             )
             self.add_regularization_weight(
                 self.dnn_embedding_layer.parameters(), l2=l2_reg_embedding
@@ -79,8 +80,8 @@ class PNN(BaseModel):
             self.dnn = DNN(
                 product_out_dim
                 + compute_inputs_dim(
-                    sparse_feature_defs=self.fds.dnn_defs_sparse,
-                    dense_feature_defs=self.fds.dnn_defs_dense,
+                    sparse_feature_defs=self.sparse_defs,
+                    dense_feature_defs=self.dense_defs,
                 ),
                 dnn_hidden_units,
                 activation=dnn_activation,
@@ -105,14 +106,12 @@ class PNN(BaseModel):
 
         # output layer setup
         self.output = OutputLayer(output_fn=output_fn, output_fn_args=output_fn_args)
-        self.to(device)
 
     def forward(self, X):
         dnn_dense_vals, dnn_sparse_embs = collect_inputs_and_embeddings(
             X,
-            sparse_feature_defs=self.fds.dnn_defs_sparse,
-            dense_feature_defs=self.fds.dnn_defs_dense,
-            feature_name_to_index=self.feature_name_to_index,
+            sparse_feature_defs=self.sparse_defs,
+            dense_feature_defs=self.dense_defs,
             embedding_layer_def=self.dnn_embedding_layer,
         )
 
@@ -121,14 +120,14 @@ class PNN(BaseModel):
             inner_product = torch.flatten(
                 self.inner_product(dnn_sparse_embs), start_dim=1
             )
-        if self.use_outter:
-            outer_product = self.outter_product(dnn_sparse_embs)
+        if self.use_outer:
+            outer_product = self.outer_product(dnn_sparse_embs)
 
-        if self.use_outter and self.use_inner:
+        if self.use_outer and self.use_inner:
             product_layer = torch.cat(
                 [linear_signal, inner_product, outer_product], dim=1
             )
-        elif self.use_outter:
+        elif self.use_outer:
             product_layer = torch.cat([linear_signal, outer_product], dim=1)
         elif self.use_inner:
             product_layer = torch.cat([linear_signal, inner_product], dim=1)

@@ -14,7 +14,6 @@ class DNN(nn.Module):
         dropout_rate=0,
         use_bn=False,
         init_std=0.0001,
-        dice_dim=3,
         seed=1024,
         device="cpu",
     ):
@@ -36,9 +35,7 @@ class DNN(nn.Module):
 
         for i in range(len(hidden_units) - 1):
             self.linear_layers.append(nn.Linear(hidden_units[i], hidden_units[i + 1]))
-            self.activation_layers.append(
-                activation_gen(activation, hidden_units[i + 1], dice_dim)
-            )
+            self.activation_layers.append(activation_gen(activation))
             if self.use_bn:
                 self.bn_layers.append(nn.BatchNorm1d(hidden_units[i + 1]))
 

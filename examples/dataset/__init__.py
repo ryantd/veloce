@@ -1,1 +1,1 @@
-from .benchmark_loader import load_benchmark_dataset
+from .loader import load_benchmark_dataset

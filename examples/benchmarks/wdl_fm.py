@@ -10,20 +10,15 @@ from examples.dataset import load_benchmark_dataset
 
 
 def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
-    datasets, feature_defs, torch_dataset_options = load_benchmark_dataset(
-        feature_def_settings={
-            "dnn": {"dense": True, "sparse": True},
-            "fm": {"dense": True, "sparse": False},
-        },
-    )
+    datasets, feature_defs, torch_dataset_options = load_benchmark_dataset()
     train_ds, valid_ds = datasets
 
     trainer = NeuralNetTrainer(
         # module and dataset configs
         module=WideAndDeep,
         module_params={
-            "dnn_feature_defs": feature_defs["dnn"],
-            "linear_feature_defs": feature_defs["fm"],
+            "dense_feature_defs": feature_defs["dense"],
+            "sparse_feature_defs": feature_defs["sparse"],
             "dnn_dropout": 0.5,
             "dnn_hidden_units": (200, 200, 200),
             "use_fm": True,

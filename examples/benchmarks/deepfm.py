@@ -10,22 +10,15 @@ from examples.dataset import load_benchmark_dataset
 
 
 def train_deepfm_dist(num_workers=2, use_gpu=False, rand_seed=2021):
-    datasets, feature_defs, torch_dataset_options = load_benchmark_dataset(
-        feature_def_settings={
-            "fm_1": {"dense": True, "sparse": True},
-            "fm_2": {"dense": True, "sparse": True},
-            "dnn": {"dense": True, "sparse": True},
-        },
-    )
+    datasets, feature_defs, torch_dataset_options = load_benchmark_dataset()
     train_ds, valid_ds = datasets
 
     trainer = NeuralNetTrainer(
         # module and dataset configs
         module=DeepFM,
         module_params={
-            "fm_1_feature_defs": feature_defs["fm_1"],
-            "fm_2_feature_defs": feature_defs["fm_2"],
-            "dnn_feature_defs": feature_defs["dnn"],
+            "dense_feature_defs": feature_defs["dense"],
+            "sparse_feature_defs": feature_defs["sparse"],
             "dnn_hidden_units": (200, 200, 200),
             "dnn_dropout": 0.5,
             "seed": rand_seed,
