@@ -46,5 +46,5 @@ def train_lr_dist(num_workers=2, use_gpu=False, rand_seed=2021):
 
 
 if __name__ == "__main__":
-    environ_validate(num_cpus=1 + 2)
+    environ_validate(n_cpus=1 + 2)
     train_lr_dist(num_workers=2)
