@@ -93,6 +93,7 @@ class DataLoader(object):
                     self.sparse_feat_names,
                     embedding_dim=embedding_dim,
                 ),
+                batch_size=None,
                 batch_format=batch_format,
             )
             .to_pandas()
@@ -123,6 +124,7 @@ class DataLoader(object):
         self.dense_defs = (
             self.ds.map_batches(
                 DenseFeatureDef(self.dense_feat_names, dimension=dim),
+                batch_size=None,
                 batch_format=batch_format,
             )
             .to_pandas()
