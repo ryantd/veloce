@@ -77,7 +77,7 @@ sparse_defs = dataloader.sparse_defs
 [Check full example code](examples/use_cases/lr_nnmodule.py) or just run `python -m examples.use_cases.lr_nnmodule`
 
 #### 4. `train_func` shim: For Ray users to wrap your `nn.Module`
-```python
+```diff
 from phetware.train_fn import WideAndDeep as WDLTrainFn
 from phetware.train_fn import RecommendationFn
 from phetware.model.torch import WideAndDeep as WDL
@@ -88,9 +88,9 @@ class MyWDL(nn.Module):
 trainer = Trainer("torch", num_workers=num_workers, use_gpu=use_gpu)
 trainer.start()
 trainer.run(
-    # or train_func=WDLTrainFn
-    # or train_func=RecommendationFn(WDL)
- >> train_func=RecommendationFn(MyWDL),
++   train_func=RecommendationFn(MyWDL),
++   # or train_func=WDLTrainFn,
++   # or train_func=RecommendationFn(WDL),
     dataset=datasets,
     config={
         "epochs": 50,
@@ -104,7 +104,7 @@ trainer.shutdown()
 ```
 [Check full example code](examples/use_cases/wdl_raytrain.py) or just run `python -m examples.use_cases.wdl_raytrain`
 #### 5. Heterogeneous: Sync Parameter Server
-```python
+```diff
 trainer = NeuralNetTrainer(
     module=WideAndDeep,
     module_params={...},
@@ -114,7 +114,9 @@ trainer = NeuralNetTrainer(
     loss_fn=nn.BCELoss(),
     optimizer=torch.optim.Adam,
     # set heterogeneous_strategy
- >> heterogeneous_strategy=PSStrategy(update_strategy=UpdateStrategy.Sync),
++   heterogeneous_strategy=PSStrategy(
++       update_strategy=UpdateStrategy.Sync
++   ),
     num_workers=num_workers,
     use_gpu=use_gpu,
 )
