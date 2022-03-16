@@ -1,4 +1,4 @@
-from phetware.util import get_module_name
+from enscale.util import get_module_name
 
 
 class OptimizerStack(object):

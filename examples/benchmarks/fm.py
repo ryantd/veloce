@@ -2,10 +2,10 @@ import torch
 import torch.nn as nn
 from torchmetrics.functional import auroc
 
-from phetware.util import pprint_results
-from phetware.environ import environ_validate
-from phetware.model.torch import FM
-from phetware import NeuralNetTrainer
+from enscale.util import pprint_results
+from enscale.environ import environ_validate
+from enscale.model.ctr import FM
+from enscale import NeuralNetTrainer
 from examples.dataset import load_benchmark_dataset
 
 

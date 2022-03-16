@@ -3,15 +3,15 @@ import torch.nn as nn
 import torchmetrics
 import ray.train as train
 
-from phetware.util import get_package_name, inspect_func_args
-from phetware.inputs import rebuild_feature_values, find_feature_values
-from phetware.model.torch import (
+from enscale.util import get_package_name, inspect_func_args
+from enscale.inputs import rebuild_feature_values, find_feature_values
+from enscale.model.ctr import (
     WideAndDeep as _WideAndDeep,
     DeepFM as _DeepFM,
     PNN as _PNN,
     FNN as _FNN,
 )
-from phetware import Epochvisor
+from enscale import Epochvisor
 
 
 class BaseTrainFn(object):
@@ -77,7 +77,7 @@ class BaseTrainFn(object):
         if enable_optimizer:
             # optimizer setup
             if get_package_name(self.optimizer) == "torch" or (
-                get_package_name(self.optimizer) == "phetware"
+                get_package_name(self.optimizer) == "enscale"
                 and type(self.optimizer).__name__ != "OptimizerStack"
             ):
                 self.optimizer = self.optimizer(

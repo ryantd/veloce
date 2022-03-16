@@ -5,11 +5,11 @@ import torch
 import ray
 import numpy as np
 
-from phetware.train_fn import BaseTrainFn
-from phetware.inputs import rebuild_feature_values, find_feature_values
-from phetware.util import inspect_func_args, ticks, merge_results, get_batches
-from phetware.preprocessing import gen_dataset_shards
-from phetware.epochvisor import LossMetricAccumulator
+from enscale.train_fn import BaseTrainFn
+from enscale.inputs import rebuild_feature_values, find_feature_values
+from enscale.util import inspect_func_args, ticks, merge_results, get_batches
+from enscale.preprocessing import gen_dataset_shards
+from enscale.epochvisor import LossMetricAccumulator
 
 
 # patch funcs for nn modules

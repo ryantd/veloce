@@ -1,27 +1,28 @@
 import torch.nn as nn
 import torch
 
-from phetware.layer import DNN, OutputLayer, FMNative
-from phetware.inputs import (
+from enscale.layer import DNN, OutputLayer, InnerProduct, OuterProduct
+from enscale.inputs import (
     concat_inputs,
     compute_inputs_dim,
     embedding_dict_gen,
     collect_inputs_and_embeddings,
+    concatenate,
 )
 from .base import BaseModel
 
 
-class FNN(BaseModel):
+class PNN(BaseModel):
     def __init__(
         self,
         # feature_defs
         dense_feature_defs=None,
         sparse_feature_defs=None,
-        # fm related
-        pre_trained_mode=False,
-        k_factor=10,
-        fm_dropout=0,
-        l2_reg_fm=1e-3,
+        # specific config
+        use_inner=True,
+        use_outer=False,
+        outer_kernel_type="mat",
+        embedding_size=4,
         # dnn related
         dnn_hidden_units=(256, 128),
         dnn_use_bn=False,
@@ -36,21 +37,35 @@ class FNN(BaseModel):
         device="cpu",
         init_std=1e-4,
     ):
-        super(FNN, self).__init__(seed=seed, device=device)
+        super(PNN, self).__init__(seed=seed, device=device)
+        if outer_kernel_type not in ["mat", "vec", "num"]:
+            raise ValueError("Arg kernel_type must be mat, vec or num")
+
         self.dense_defs = dense_feature_defs
         self.sparse_defs = sparse_feature_defs
         self.use_dnn = len(dnn_hidden_units) > 0
-        self.pre_trained_mode = pre_trained_mode
+        self.use_inner = use_inner
+        self.use_outer = use_outer
+        self.outer_kernel_type = outer_kernel_type
+        self.embedding_size = embedding_size
 
-        # fm layers setup
-        self.fm = FMNative(
-            feature_def_dims=sum(fc.dimension for fc in self.dense_defs)
-            + sum(fc.embedding_dim for fc in self.sparse_defs),
-            k_factor=k_factor,
-            dropout_rate=fm_dropout,
-            init_std=init_std,
-        )
-        self.add_regularization_weight(self.fm.parameters(), l2=l2_reg_fm)
+        product_out_dim = 0
+        inputs_dim = compute_inputs_dim(self.sparse_defs, feature_group=True)
+        num_pairs = int(inputs_dim * (inputs_dim - 1) / 2)
+
+        # product layer setup
+        if self.use_inner:
+            product_out_dim += num_pairs
+            self.inner_product = InnerProduct(device=device)
+
+        if self.use_outer:
+            product_out_dim += num_pairs
+            self.outer_product = OuterProduct(
+                inputs_dim,
+                self.embedding_size,
+                kernel_type=self.outer_kernel_type,
+                device=device,
+            )
 
         # dnn layer setup
         if self.use_dnn:
@@ -61,8 +76,10 @@ class FNN(BaseModel):
             self.add_regularization_weight(
                 self.dnn_embedding_layer.parameters(), l2=l2_reg_embedding
             )
+
             self.dnn = DNN(
-                compute_inputs_dim(
+                product_out_dim
+                + compute_inputs_dim(
                     sparse_feature_defs=self.sparse_defs,
                     dense_feature_defs=self.dense_defs,
                 ),
@@ -77,6 +94,7 @@ class FNN(BaseModel):
             self.final_linear = nn.Linear(dnn_hidden_units[-1], 1, bias=False).to(
                 device
             )
+
             self.add_regularization_weight(
                 filter(
                     lambda x: "weight" in x[0] and "bn" not in x[0],
@@ -96,10 +114,31 @@ class FNN(BaseModel):
             dense_feature_defs=self.dense_defs,
             embedding_layer_def=self.dnn_embedding_layer,
         )
-        if self.pre_trained_mode:
-            logit = self.fm(concat_inputs(dnn_sparse_embs, dnn_dense_vals))
-        elif self.use_dnn:
-            output = self.dnn(concat_inputs(dnn_sparse_embs, dnn_dense_vals))
-            logit = self.final_linear(output)
+
+        linear_signal = torch.flatten(concatenate(dnn_sparse_embs), start_dim=1)
+        if self.use_inner:
+            inner_product = torch.flatten(
+                self.inner_product(dnn_sparse_embs), start_dim=1
+            )
+        if self.use_outer:
+            outer_product = self.outer_product(dnn_sparse_embs)
+
+        if self.use_outer and self.use_inner:
+            product_layer = torch.cat(
+                [linear_signal, inner_product, outer_product], dim=1
+            )
+        elif self.use_outer:
+            product_layer = torch.cat([linear_signal, outer_product], dim=1)
+        elif self.use_inner:
+            product_layer = torch.cat([linear_signal, inner_product], dim=1)
+        else:
+            product_layer = linear_signal
+
+        # dnn
+        if self.use_dnn:
+            dnn_input = concat_inputs([product_layer], dnn_dense_vals)
+            dnn_output = self.dnn(dnn_input)
+            dnn_logit = self.final_linear(dnn_output)
+            logit = dnn_logit
         y = self.output(logit)
         return y

@@ -5,7 +5,7 @@ import pandas as pd
 import ray
 from pyarrow.csv import ConvertOptions
 
-from phetware.feature_column import SparseFeatureDef, DenseFeatureDef
+from enscale.feature_column import SparseFeatureDef, DenseFeatureDef
 
 
 class fillna(object):

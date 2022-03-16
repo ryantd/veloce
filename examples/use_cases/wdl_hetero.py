@@ -2,13 +2,13 @@ import torch
 import torch.nn as nn
 from torchmetrics.functional import auroc
 
-from phetware.model.torch import WideAndDeep
-from phetware.optimizer import OptimizerStack, FTRL
-from phetware.util import pprint_results
-from phetware import NeuralNetTrainer
-from phetware.environ import environ_validate
-from phetware.heterogeneous import PSStrategy, UpdateStrategy
-from phetware.preprocessing import DataLoader
+from enscale.model.ctr import WideAndDeep
+from enscale.optimizer import OptimizerStack, FTRL
+from enscale.util import pprint_results
+from enscale import NeuralNetTrainer
+from enscale.environ import environ_validate
+from enscale.heterogeneous import PSStrategy, UpdateStrategy
+from enscale.preprocessing import DataLoader
 
 
 def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):

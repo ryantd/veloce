@@ -1,8 +1,8 @@
 import torch
 
-from phetware.layer import OutputLayer, FMNative
-from phetware.model.torch.base import BaseModel
-from phetware.inputs import (
+from enscale.layer import OutputLayer, FMNative
+from enscale.model.ctr.base import BaseModel
+from enscale.inputs import (
     embedding_dict_gen,
     collect_inputs_and_embeddings,
     concat_inputs,

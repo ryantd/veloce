@@ -1,4 +1,4 @@
-from phetware.preprocessing import DataLoader
+from enscale.preprocessing import DataLoader
 
 BENCHMARK_DATASET_DEFAULT = "examples/dataset/ctr/criteo_100k.txt"
 

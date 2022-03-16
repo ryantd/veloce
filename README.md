@@ -1,9 +1,6 @@
-# Phetware (WIP)
-## About `phetware`
-__phetware__ is an `instant distributed computing` toolbox based on the Ray stack and ML/DL frameworks, which is scalable, efficient, and easy-to-use. It accelerates the development of any ML/DL training workload, on any cloud or local, at any number of workloads.
-
-### To Ray Team
-The project name comes from the system (named phet) within our company, so be free to change it.
+# Enscale (WIP)
+## About
+Enscale is an `instant distributed computing` toolbox based on the Ray stack and ML/DL frameworks, which is scalable, efficient, and easy-to-use. It accelerates the development of any ML/DL training workload, on any cloud or local, at any number of workloads.
 
 ## Goals
 - Launch any ML/DL workloads **instantly** locally or to any cloud
@@ -78,9 +75,9 @@ sparse_defs = dataloader.sparse_defs
 
 #### 4. `train_func` shim: For Ray users to wrap your `nn.Module`
 ```diff
-from phetware.train_fn import WideAndDeep as WDLTrainFn
-from phetware.train_fn import RecommendationFn
-from phetware.model.torch import WideAndDeep as WDL
+from enscale.train_fn import WideAndDeep as WDLTrainFn
+from enscale.train_fn import RecommendationFn
+from enscale.model.ctr import WideAndDeep as WDL
 
 class MyWDL(nn.Module):
     ...
@@ -149,18 +146,17 @@ trainer.run()
 
 ## Roadmap
 
-> This project is aimed to deal with distributed ML/DL computing based on the Ray stack.
+> This project is aimed to deal with distributed ML/DL computing based on the Ray stack with PyTorch.
 
 - Heterogeneous Strategy on Distributed Training
   - [x] Sync Parameter Server
   - [ ] Aync Parameter Server
-  - [ ] Hybird Phase 1: Use sync or async for the dense or sparse component as you like, under homogeneous architecture
-  - [ ] Hybird Phase 2: Compelete. You can choose async PS for the sparse component, and sync Ring Allreduce (like PyTorch's DDP) for the dense component
+  - [ ] Hybird Phase 1: use sync or async for the dense or sparse component as you like, under homogeneous architecture
+  - [ ] Hybird Phase 2 (compelete): you can choose async PS for the sparse component, and sync Ring Allreduce (like PyTorch's DDP) for the dense component
 - Framework Support
-  - [x] PyTorch
-  - [ ] Tensorflow
+  - [x] PyTorch: currently no specific plan to support other frameworks
 - Advanced Parallel Mechanism
-  - [ ] Integrated [torchrec](https://github.com/pytorch/torchrec)
+  - [ ] Heavy integrated [torchrec](https://github.com/pytorch/torchrec)
 
 ## License
-`phetware` is MIT licensed, as found in the [LICENSE](LICENSE) file.
+Enscale is MIT licensed, as found in the [LICENSE](LICENSE) file.

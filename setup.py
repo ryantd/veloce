@@ -6,14 +6,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="phetware",
+    name="enscale",
     version="0.0.1",
     author="Xiaoyu Zhai",
     author_email="zhaixiaoyu1@360.cn",
-    description="phetware: An instant distributed computing ML/DL toolbox based on Ray Stack!",
+    description="Enscale: An instant distributed computing ML/DL toolbox based on Ray Stack",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="http://prophet.qihoo.net/",
+    url="https://github.com/ryantd/enscale",
     packages=find_packages(),
-    package_dir={"phetware": "phetware"},
+    package_dir={"enscale": "enscale"},
 )

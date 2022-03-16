@@ -6,11 +6,11 @@ from ray.train import Trainer
 from ray.train.callbacks import JsonLoggerCallback, TBXLoggerCallback
 from sklearn.metrics import log_loss
 
-from phetware.train_fn import WideAndDeep
-from phetware.optimizer import OptimizerStack, FTRL
-from phetware.loss_fn import LossFnStack
-from phetware.util import pprint_results
-from phetware.preprocessing import DataLoader
+from enscale.train_fn import WideAndDeep
+from enscale.optimizer import OptimizerStack, FTRL
+from enscale.loss_fn import LossFnStack
+from enscale.util import pprint_results
+from enscale.preprocessing import DataLoader
 
 
 def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):

@@ -1,7 +1,7 @@
 import torch
 
-from phetware.layer import OutputLayer
-from phetware.model.torch.base import Linear, BaseModel
+from enscale.layer import OutputLayer
+from enscale.model.ctr.base import Linear, BaseModel
 
 
 class LR(BaseModel):
