@@ -50,11 +50,14 @@ class BaseTrainFn(object):
         )
         try:
             import torchmetrics
+
             self.metric_fns = config.get("metric_fns", [torchmetrics.AUROC()])
         except:
             self.metric_fns = config.get("metric_fns", None)
             if not self.metric_fns:
-                raise ValueError("Arg metric_fns must be given and valid, you may use sklearn or torchmetrics metric functions")
+                raise ValueError(
+                    "Arg metric_fns must be given and valid, you may use sklearn or torchmetrics metric functions"
+                )
         try:
             self.checkpoint = train.load_checkpoint() or None
             self.device = train.torch.get_device()

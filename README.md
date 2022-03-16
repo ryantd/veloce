@@ -1,6 +1,6 @@
 # Enscale
 ## About
-**Enscale** is an `instant distributed computing` toolbox based on the Ray stack and ML/DL frameworks, which is scalable, efficient, and easy-to-use. It accelerates the development of any ML/DL training workload, on any cloud or local, at any number of workloads.
+**Enscale** is an `instant distributed computing` toolbox based on the Ray stack and ML/DL frameworks, which is scalable, efficient, and easy-to-use. It accelerates the development of any ML/DL training workload, on any cloud or local, at any parallelism size.
 
 ## Goals
 - Launch any interactive ML/DL workloads **instantly** on your laptop or to any cloud
@@ -24,6 +24,21 @@ If you want to do data processing, requires
 - pyarrow >= `6.0.1`
 
 > Or just run `pip install -r requirements/requirements.txt` to set up a demo environment.
+
+### Installation
+
+#### Using Pre-compiled Wheels
+```shell
+# CPU version
+pip install enscale
+```
+
+#### From Source
+```shell
+git clone https://github.com/ryantd/enscale
+cd enscale
+python setup.py install
+```
 
 ### Lightning example
 
@@ -65,8 +80,8 @@ trainer = NeuralNetTrainer(
     loss_fn=nn.BCELoss(),
     optimizer=torch.optim.Adam,
     metric_fns=[roc_auc_score],
-    # logger and visualization hook callbacks
-    callbacks=["json", "tbx"],
+    # logger callbacks
+    callbacks=["json"],
     # computation abstract on distributed
     num_workers=N_WORKERS,
 )

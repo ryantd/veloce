@@ -136,7 +136,7 @@ class NeuralNetTrainer(object):
                 use_early_stopping=self.use_early_stopping,
                 early_stopping_args=self.early_stopping_args,
                 shared_validation_dataset=self.shared_validation_dataset,
-                **self.module_params
+                **self.module_params,
             )
             try:
                 addon_module_params = addon.pop("module_params")

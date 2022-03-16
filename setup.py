@@ -2,12 +2,14 @@
 
 from setuptools import setup, find_packages
 
+import enscale
+
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
     name="enscale",
-    version="0.0.2",
+    version=enscale.__version__,
     author="Xiaoyu Zhai",
     author_email="xiaoyu.zhai@hotmail.com",
     description="Enscale: An instant distributed computing ML/DL toolbox based on Ray Stack",
