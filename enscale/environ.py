@@ -1,8 +1,6 @@
-import os
-
 import ray
 
-INIT_FLAG = "enscale_RAY_ENVIRON_INITIALIZED"
+INIT_FLAG = "ENSCALE_RAY_ENVIRON_INITIALIZED"
 
 
 def environ_validate(n_cpus=2, n_gpus=0, cluster_endpoint=None, **kwargs):

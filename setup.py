@@ -7,9 +7,9 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="enscale",
-    version="0.0.1",
+    version="0.0.2",
     author="Xiaoyu Zhai",
-    author_email="zhaixiaoyu1@360.cn",
+    author_email="xiaoyu.zhai@hotmail.com",
     description="Enscale: An instant distributed computing ML/DL toolbox based on Ray Stack",
     long_description=long_description,
     long_description_content_type="text/markdown",

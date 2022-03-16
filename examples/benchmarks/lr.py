@@ -6,7 +6,7 @@ from enscale.environ import environ_validate
 from enscale.optimizer import FTRL
 from enscale.model.ctr import LR
 from enscale import NeuralNetTrainer
-from examples.dataset import load_benchmark_dataset
+from enscale.util import load_benchmark_dataset
 
 
 def train_lr_dist(num_workers=2, use_gpu=False, rand_seed=2021):

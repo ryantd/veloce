@@ -12,7 +12,7 @@ from enscale.preprocessing import DataLoader
 
 
 def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):
-    dataloader = DataLoader("examples/dataset/ctr/criteo_100k.txt")
+    dataloader = DataLoader("examples/dataset/ctr/criteo_mini.txt")
     dataloader = (
         dataloader.set_label_column(label_name="label")
         .set_dense_features(feat_names=[f"I{i}" for i in range(1, 14)])

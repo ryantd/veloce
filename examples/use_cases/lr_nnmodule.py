@@ -9,10 +9,10 @@ from enscale import NeuralNetTrainer
 from enscale.preprocessing import DataLoader
 
 """
-A LR use-case of Enscale
+A native nn.Module use-case of Enscale
 
 What we have in the file:
-    1. A Native PyTorch nn.Module
+    1. A Native PyTorch nn.Module.
     2. Use Enscale's DataLoader to load dataset, define features and do
     preprocessing. This component is leveraged by _Ray Data_.
     3. Use NeuralNetTrainer to launch a data scientist-friendly training
@@ -80,7 +80,7 @@ class LR(nn.Module):
 
 
 def train_lr_dist(num_workers=2, use_gpu=False, rand_seed=2021):
-    dataloader = DataLoader("examples/dataset/ctr/criteo_100k.txt")
+    dataloader = DataLoader("examples/dataset/ctr/criteo_mini.txt")
     dataloader = (
         dataloader.set_label_column(label_name="label")
         .set_dense_features(feat_names=[f"I{i}" for i in range(1, 14)])

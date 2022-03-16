@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torchmetrics
 import ray.train as train
 
 from enscale.util import get_package_name, inspect_func_args
@@ -38,7 +37,6 @@ class BaseTrainFn(object):
         self.loss_fn = config.get("loss_fn", nn.BCELoss())
         self.optimizer = config.get("optimizer", torch.optim.Adam)
         self.optimizer_args = config.get("optimizer_args", None) or {}
-        self.metric_fns = config.get("metric_fns", [torchmetrics.AUROC()])
         self.output_fn = config.get("output_fn", torch.sigmoid)
         self.output_fn_args = config.get("output_fn_args", None)
         self.summary_nn_arch = config.get("summary_nn_arch", False)
@@ -50,6 +48,13 @@ class BaseTrainFn(object):
         self.shared_validation_dataset_shard = config.get(
             "shared_validation_dataset", None
         )
+        try:
+            import torchmetrics
+            self.metric_fns = config.get("metric_fns", [torchmetrics.AUROC()])
+        except:
+            self.metric_fns = config.get("metric_fns", None)
+            if not self.metric_fns:
+                raise ValueError("Arg metric_fns must be given and valid, you may use sklearn or torchmetrics metric functions")
         try:
             self.checkpoint = train.load_checkpoint() or None
             self.device = train.torch.get_device()
@@ -86,7 +91,7 @@ class BaseTrainFn(object):
             elif type(self.optimizer).__name__ == "OptimizerStack":
                 self.optimizer.compile(self.model.module if enable_ddp else self.model)
             else:
-                raise ValueError("optimizer must be given and valid")
+                raise ValueError("Arg optimizer must be given and valid")
 
     def setup_epv(self):
         self.epv = Epochvisor(

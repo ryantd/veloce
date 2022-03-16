@@ -1,9 +1,9 @@
-# Enscale (WIP)
+# Enscale
 ## About
-Enscale is an `instant distributed computing` toolbox based on the Ray stack and ML/DL frameworks, which is scalable, efficient, and easy-to-use. It accelerates the development of any ML/DL training workload, on any cloud or local, at any number of workloads.
+**Enscale** is an `instant distributed computing` toolbox based on the Ray stack and ML/DL frameworks, which is scalable, efficient, and easy-to-use. It accelerates the development of any ML/DL training workload, on any cloud or local, at any number of workloads.
 
 ## Goals
-- Launch any ML/DL workloads **instantly** locally or to any cloud
+- Launch any interactive ML/DL workloads **instantly** on your laptop or to any cloud
 - **Scale** your own single-machine neural network modules to a native **distributed** manner
 - Apply **heterogeneous** architecture
 - **Data scientist-friendly** API
@@ -14,132 +14,67 @@ Enscale is an `instant distributed computing` toolbox based on the Ray stack and
 
 ## Getting Started
 ### Prerequisites
-- ray `1.10.1` and torch `1.10.1`
-- or just run `pip install -r requirements/requirements.txt`
+- Python >= `3.7.1`
+- requests >= `2.26.0`
+- ray >= `1.9.2`
+- torch >= `1.9.1`
 
-### Features
-#### 1. Data scientist-friendly `NeuralNetTrainer`
+If you want to do data processing, requires
+- pandas >= `1.3.5`
+- pyarrow >= `6.0.1`
+
+> Or just run `pip install -r requirements/requirements.txt` to set up a demo environment.
+
+### Lightning example
+
+> See more hands-on and advanced examples [here](examples/readme.md).
+
+The following example requires `sklearn` to be installed. And `tqdm` is optional, which enables progress reporting.
+
 ```python
+import torch
+import torch.nn as nn
+from sklearn.metrics import roc_auc_score
+from enscale.util import pprint_results, load_benchmark_dataset
+from enscale.model.ctr import DeepFM
+from enscale import NeuralNetTrainer, environ_validate
+
+N_WORKERS = 2
+N_DATA_PROCESSOR = 1
+
+# environment setup
+environ_validate(n_cpus=N_DATA_PROCESSOR + N_WORKERS)
+# load dataset and sparsity definition
+datasets, feature_defs, dataset_options = load_benchmark_dataset(
+    # set your own dataset by `data_path="criteo_mini.txt"`
+    separate_valid_dataset=False
+)
+# trainer setup
 trainer = NeuralNetTrainer(
     # module and dataset configs
-    module=LR, # your own nn.Module or built in modules
+    module=DeepFM, # your own nn.Module or built in modules
     module_params={
-        "dense_defs": dense_defs,
-        "sparse_defs": sparse_defs,
-        "seed": rand_seed,
+        "dense_feature_defs": feature_defs["dense"],
+        "sparse_feature_defs": feature_defs["sparse"],
     },
     dataset=datasets,
-    dataset_options=torch_dataset_options,
+    dataset_options=dataset_options,
     # trainer configs
-    epochs=20,
-    batch_size=512,
-    loss_fn=nn.BCELoss(),
-    optimizer=torch.optim.Adam,
-    metric_fns=[auroc],
-    num_workers=num_workers,
-    use_gpu=use_gpu,
-    callbacks=["json", "tbx"],
-)
-results = trainer.run()
-pprint_results(results)
-```
-
-[Check full example code](examples/use_cases/lr_nnmodule.py) or just run `python -m examples.use_cases.lr_nnmodule`
-#### 2. Common models for RecSys: PyTorch-based modules
-- [LR](examples/benchmarks/lr.py)
-- [FM](examples/benchmarks/fm.py)
-- pre-train based [FNN](examples/benchmarks/fnn.py)
-- PNN family: [inner product based PNN](examples/benchmarks/ipnn.py), [outer product based PNN](examples/benchmarks/opnn.py), and [hybrid PNN](examples/benchmarks/pnn.py)
-- [Wide-and-Deep](examples/benchmarks/wdl.py) and [its variants](examples/benchmarks/wdl_fm.py)
-- [DeepFM](examples/benchmarks/deepfm.py)
-
-[Check benchmarks directory](examples/benchmarks) or just run `python -m examples.benchmarks.<SCRIPT_NAME>`
-#### 3. The sparse or dense feature and data processing API
-```python
-dataloader = DataLoader("examples/dataset/ctr/criteo_100k.txt")
-dataloader = (dataloader
-    .set_label_column(label_name="label")
-    .set_dense_features(feat_names=[f"I{i}" for i in range(1, 14)])
-    .set_sparse_features(feat_names=[f"C{i}" for i in range(1, 27)])
-    # this order should follow the data file
-    .set_features_order(order=("dense", "sparse"))
-)
-# train set and test set
-datasets = dataloader.split()
-# dense features definition
-dense_defs = dataloader.dense_defs
-# sparse features definition
-sparse_defs = dataloader.sparse_defs
-```
-[Check full example code](examples/use_cases/lr_nnmodule.py) or just run `python -m examples.use_cases.lr_nnmodule`
-
-#### 4. `train_func` shim: For Ray users to wrap your `nn.Module`
-```diff
-from enscale.train_fn import WideAndDeep as WDLTrainFn
-from enscale.train_fn import RecommendationFn
-from enscale.model.ctr import WideAndDeep as WDL
-
-class MyWDL(nn.Module):
-    ...
-
-trainer = Trainer("torch", num_workers=num_workers, use_gpu=use_gpu)
-trainer.start()
-trainer.run(
-+   train_func=RecommendationFn(MyWDL),
-+   # or train_func=WDLTrainFn,
-+   # or train_func=RecommendationFn(WDL),
-    dataset=datasets,
-    config={
-        "epochs": 50,
-        "batch_size": 32,
-        "loss_fn": nn.BCELoss(),
-        "optimizer": orch.optim.Adam,
-        ...
-    },
-)
-trainer.shutdown()
-```
-[Check full example code](examples/use_cases/wdl_raytrain.py) or just run `python -m examples.use_cases.wdl_raytrain`
-#### 5. Heterogeneous: Sync Parameter Server
-```diff
-trainer = NeuralNetTrainer(
-    module=WideAndDeep,
-    module_params={...},
-    dataset=datasets,
     epochs=5,
     batch_size=512,
     loss_fn=nn.BCELoss(),
     optimizer=torch.optim.Adam,
-    # set heterogeneous_strategy
-+   heterogeneous_strategy=PSStrategy(
-+       update_strategy=UpdateStrategy.Sync
-+   ),
-    num_workers=num_workers,
-    use_gpu=use_gpu,
+    metric_fns=[roc_auc_score],
+    # logger and visualization hook callbacks
+    callbacks=["json", "tbx"],
+    # computation abstract on distributed
+    num_workers=N_WORKERS,
 )
-trainer.run()
+# run and print results
+results = trainer.run()
+pprint_results(results)
 ```
-[Check full example code](examples/use_cases/wdl_hetero.py) or just run `python -m examples.use_cases.wdl_hetero`
 
-#### 6. `OptimizerStack` and `LossFnStack`
-```python
-"loss_fn": LossFnStack(
-    # support multiple loss functions with fixed weight
-    dict(fn=nn.BCELoss(), weight=0.8),
-    dict(fn=nn.HingeEmbeddingLoss(), weight=0.2),
-)
-
-"optimizer": OptimizerStack(
-    # support multiple optimizers
-    dict(cls=torch.optim.Adam, model_key="deep_model"),
-    dict(
-        cls=FTRL,
-        args=dict(lr=0.925, weight_decay=1e-3),
-        model_key="wide_model",
-    ),
-),
-```
-[Check full example code](examples/use_cases/wdl_raytrain.py) or just run `python -m examples.use_cases.wdl_raytrain`
 ## Architecture
 
 ![arch](docs/images/arch.png)
@@ -157,6 +92,12 @@ trainer.run()
   - [x] PyTorch: currently no specific plan to support other frameworks
 - Advanced Parallel Mechanism
   - [ ] Heavy integrated [torchrec](https://github.com/pytorch/torchrec)
+- Accelerator Support
+  - [ ] GPU: complete inspection required
+
+## Reference
+- [Ray and Ray Train](https://github.com/ray-project/ray): Distributed Deep Learning (beta). Docs [here](https://docs.ray.io/en/master/train/train.html).
+- [DeepCTR-Torch](https://github.com/shenweichen/DeepCTR-Torch): Easy-to-use, modular and extendible package of deep-learning based CTR models.
 
 ## License
 Enscale is MIT licensed, as found in the [LICENSE](LICENSE) file.

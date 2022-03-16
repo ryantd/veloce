@@ -7,7 +7,7 @@ from enscale.optimizer import OptimizerStack, FTRL
 from enscale.util import pprint_results
 from enscale import NeuralNetTrainer
 from enscale.environ import environ_validate
-from examples.dataset import load_benchmark_dataset
+from enscale.util import load_benchmark_dataset
 
 
 def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):

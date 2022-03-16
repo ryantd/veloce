@@ -6,7 +6,7 @@ from enscale.model.ctr import FNN
 from enscale.util import pprint_results
 from enscale.environ import environ_validate
 from enscale import NeuralNetTrainer
-from examples.dataset import load_benchmark_dataset
+from enscale.util import load_benchmark_dataset
 
 
 def train_fnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
