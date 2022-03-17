@@ -49,6 +49,8 @@ python setup.py install
 
 The following example requires `sklearn` to be installed. And `tqdm` is optional, which enables progress reporting.
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1mtDacq6Yty4k5tz_6iVA-lk83YnD46S3?usp=sharing)
+
 ```python
 import torch
 import torch.nn as nn

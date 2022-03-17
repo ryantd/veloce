@@ -18,4 +18,8 @@ setup(
     url="https://github.com/ryantd/enscale",
     packages=find_packages(),
     package_dir={"enscale": "enscale"},
+    install_requires=[
+        "pandas>=1.3.5",
+        "pyarrow>=6.0.1",
+    ],
 )
