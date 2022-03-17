@@ -12,7 +12,7 @@ setup(
     version=enscale.__version__,
     author="Xiaoyu Zhai",
     author_email="xiaoyu.zhai@hotmail.com",
-    description="Enscale: An instant distributed computing ML/DL toolbox based on Ray Stack",
+    description="Enscale: An instant distributed computing library based on Ray stack",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ryantd/enscale",

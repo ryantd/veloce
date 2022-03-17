@@ -1,15 +1,18 @@
 # Enscale
-## About
-**Enscale** is an `instant distributed computing` toolbox based on the Ray stack and ML/DL frameworks, which is scalable, efficient, and easy-to-use. It accelerates the development of any ML/DL training workload, on any cloud or local, at any parallelism size.
 
-## Goals
+> The project is still in heavy development. And currently, Enscale focuses on **PyTorch** and the **recommendation** scenario.
+
+## About
+**Enscale** is an `instant distributed computing` library based on the **Ray Train** and **Ray Data**, which is scalable, efficient, and easy-to-use. It accelerates the development of any ML/DL training workload, on any cloud or local, at any parallelism size.
+
+### Goals
 - Launch any interactive ML/DL workloads **instantly** on your laptop or to any cloud
 - **Scale** your own single-machine neural network modules to a native **distributed** manner
 - Apply **heterogeneous** architecture
 - **Data scientist-friendly** API
 - **Sparse** and **dense feature** definitions
 
-## Non-Goals
+### Non-Goals
 - Not a neural network library, there are only some benchmark modules provided.
 
 ## Getting Started
@@ -42,7 +45,7 @@ python setup.py install
 
 ### Lightning example
 
-> See more hands-on and advanced examples [here](examples/readme.md).
+> See more hands-on and advanced examples [here](examples/readme.md), like heterogeneous support and sparsity definition.
 
 The following example requires `sklearn` to be installed. And `tqdm` is optional, which enables progress reporting.
 
@@ -57,9 +60,9 @@ from enscale import NeuralNetTrainer, environ_validate
 N_WORKERS = 2
 N_DATA_PROCESSOR = 1
 
-# environment setup
+# ray environment setup
 environ_validate(n_cpus=N_DATA_PROCESSOR + N_WORKERS)
-# load dataset and sparsity definition
+# load dataset and sparsity definition pre-defined
 datasets, feature_defs, dataset_options = load_benchmark_dataset(
     # set your own dataset by `data_path="criteo_mini.txt"`
     separate_valid_dataset=False
@@ -96,8 +99,6 @@ pprint_results(results)
 
 ## Roadmap
 
-> This project is aimed to deal with distributed ML/DL computing based on the Ray stack with PyTorch.
-
 - Heterogeneous Strategy on Distributed Training
   - [x] Sync Parameter Server
   - [ ] Aync Parameter Server
@@ -111,7 +112,7 @@ pprint_results(results)
   - [ ] GPU: complete inspection required
 
 ## Reference
-- [Ray and Ray Train](https://github.com/ray-project/ray): Distributed Deep Learning (beta). Docs [here](https://docs.ray.io/en/master/train/train.html).
+- [Ray and Ray Train](https://github.com/ray-project/ray): Ray Train is a lightweight library for distributed deep learning, allowing you to scale up and speed up training for your deep learning models. Docs [here](https://docs.ray.io/en/master/train/train.html).
 - [DeepCTR-Torch](https://github.com/shenweichen/DeepCTR-Torch): Easy-to-use, modular and extendible package of deep-learning based CTR models.
 
 ## License
