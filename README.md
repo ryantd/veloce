@@ -1,6 +1,12 @@
-# Enscale
+<br />
+<div align="center">
+  <a href="https://github.com/ryantd/enscale">
+    <img src="docs/images/logo.png" alt="Logo">
+  </a>
+</div>
+<br />
 
-> The project is still in heavy development. And currently, Enscale focuses on **PyTorch** and the **recommendation** scenario.
+> The project is currently under heavy development, and focusing on **PyTorch** and the **recommendation** scenario.
 
 ## About
 **Enscale** is an `instant distributed computing` library based on the **Ray Train** and **Ray Data**, which is scalable, efficient, and easy-to-use. It accelerates the development of any ML/DL training workload, on any cloud or local, at any parallelism size.
@@ -26,7 +32,7 @@ If you want to do data processing, requires
 - pandas >= `1.3.5`
 - pyarrow >= `6.0.1`
 
-> Or just run `pip install -r requirements/requirements.txt` to set up a demo environment.
+Or just run `pip install -r requirements/requirements.txt` to set up a local demo environment.
 
 ### Installation
 
@@ -42,6 +48,15 @@ git clone https://github.com/ryantd/enscale
 cd enscale
 python setup.py install
 ```
+
+### Runtime environment
+
+The library can launch **locally** or on any **cloud provider** with Ray set up.
+
+- If you want to launch on the cloud, go through this [doc](https://docs.ray.io/en/latest/cluster/cloud.html#launching-cloud-clusters) to set up your Ray Cluster. And then you can use `environ_validate(n_cpus=N, cluster_endpoint="ray://<head_node_host>:<port>")` to connect your cluster.
+- Or just use `environ_validate(n_cpus=N)` to have a local experience.
+
+You can add more native `ray.init` arguments, just put them into `environ_validate` call. Like `environ_validate(n_cpus=N, ignore_reinit_error=True)` to make Ray suppresses errors from calling `ray.init()` a second time.
 
 ### Lightning example
 
@@ -105,9 +120,9 @@ pprint_results(results)
   - [x] Sync Parameter Server
   - [ ] Aync Parameter Server
   - [ ] Hybird Phase 1: use sync or async for the dense or sparse component as you like, under homogeneous architecture
-  - [ ] Hybird Phase 2 (compelete): you can choose async PS for the sparse component, and sync Ring Allreduce (like PyTorch's DDP) for the dense component
+  - [ ] Hybird Phase 2: you can choose async PS for the sparse component, and sync Ring Allreduce (like PyTorch's DDP) for the dense component
 - Framework Support
-  - [x] PyTorch: currently no specific plan to support other frameworks
+  - [x] PyTorch: no specific plan to support other frameworks
 - Advanced Parallel Mechanism
   - [ ] Heavy integrated [torchrec](https://github.com/pytorch/torchrec)
 - Accelerator Support
