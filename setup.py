@@ -29,7 +29,10 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/ryantd/enscale",
     packages=find_packages(),
-    package_dir={"enscale": "enscale"},
+    package_dir={
+        "enscale": "enscale",
+        "docs": "docs",
+    },
     install_requires=[
         "torch>=1.9.1",
         "ray>=1.9.2,<=1.10",
