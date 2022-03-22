@@ -1,7 +1,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/ryantd/enscale">
-    <img src="docs/images/logo.png" alt="Logo">
+    <img src="docs/images/logo.png" alt="Enscale Logo">
   </a>
 </div>
 <br />
@@ -23,16 +23,13 @@
 
 ## Getting Started
 ### Prerequisites
-- Python >= `3.7.1`
-- requests >= `2.26.0`
-- ray >= `1.9.2`
-- torch >= `1.9.1`
-
-If you want to do data processing, requires
-- pandas >= `1.3.5`
-- pyarrow >= `6.0.1`
-
-Or just run `pip install -r requirements/requirements.txt` to set up a local demo environment.
+- Python version >= `3.7.1`
+- Packages
+  - requests >= `2.26.0`
+  - ray >= `1.9.2` and <= `1.10`
+  - torch >= `1.9.1`
+  - pandas >= `1.3.5`
+  - pyarrow >= `6.0.1`
 
 ### Installation
 
@@ -46,7 +43,7 @@ pip install enscale
 ```shell
 git clone https://github.com/ryantd/enscale
 cd enscale
-python setup.py install
+pip install -e .
 ```
 
 ### Runtime environment
