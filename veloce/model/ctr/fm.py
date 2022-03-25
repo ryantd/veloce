@@ -1,8 +1,8 @@
 import torch
 
-from enscale.layer import OutputLayer, FMNative
-from enscale.model.ctr.base import BaseModel
-from enscale.inputs import (
+from veloce.layer import OutputLayer, FMNative
+from veloce.model.ctr.base import BaseModel
+from veloce.inputs import (
     embedding_dict_gen,
     collect_inputs_and_embeddings,
     concat_inputs,

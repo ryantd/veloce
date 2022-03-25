@@ -1,7 +1,7 @@
 import torch
 
-from enscale.layer import OutputLayer
-from enscale.model.ctr.base import Linear, BaseModel
+from veloce.layer import OutputLayer
+from veloce.model.ctr.base import Linear, BaseModel
 
 
 class LR(BaseModel):

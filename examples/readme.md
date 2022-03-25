@@ -59,9 +59,9 @@ sparse_defs = dataloader.sparse_defs
 
 ## 4. `train_func` shim: For Ray users to wrap your `nn.Module`
 ```diff
-from enscale.train_fn import WideAndDeep as WDLTrainFn
-from enscale.train_fn import RecommendationFn
-from enscale.model.ctr import WideAndDeep as WDL
+from veloce.train_fn import WideAndDeep as WDLTrainFn
+from veloce.train_fn import RecommendationFn
+from veloce.model.ctr import WideAndDeep as WDL
 
 class MyWDL(nn.Module):
     ...

@@ -2,15 +2,15 @@ import torch
 import torch.nn as nn
 import ray.train as train
 
-from enscale.util import get_package_name, inspect_func_args
-from enscale.inputs import rebuild_feature_values, find_feature_values
-from enscale.model.ctr import (
+from veloce.util import get_package_name, inspect_func_args
+from veloce.inputs import rebuild_feature_values, find_feature_values
+from veloce.model.ctr import (
     WideAndDeep as _WideAndDeep,
     DeepFM as _DeepFM,
     PNN as _PNN,
     FNN as _FNN,
 )
-from enscale import Epochvisor
+from veloce import Epochvisor
 
 
 class BaseTrainFn(object):
@@ -85,7 +85,7 @@ class BaseTrainFn(object):
         if enable_optimizer:
             # optimizer setup
             if get_package_name(self.optimizer) == "torch" or (
-                get_package_name(self.optimizer) == "enscale"
+                get_package_name(self.optimizer) == "veloce"
                 and type(self.optimizer).__name__ != "OptimizerStack"
             ):
                 self.optimizer = self.optimizer(

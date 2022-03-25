@@ -5,11 +5,11 @@ import torch
 import ray
 import numpy as np
 
-from enscale.train_fn import BaseTrainFn
-from enscale.inputs import rebuild_feature_values, find_feature_values
-from enscale.util import inspect_func_args, ticks, merge_results, get_batches
-from enscale.preprocessing import gen_dataset_shards
-from enscale.epochvisor import LossMetricAccumulator
+from veloce.train_fn import BaseTrainFn
+from veloce.inputs import rebuild_feature_values, find_feature_values
+from veloce.util import inspect_func_args, ticks, merge_results, get_batches
+from veloce.preprocessing import gen_dataset_shards
+from veloce.epochvisor import LossMetricAccumulator
 
 
 # patch funcs for nn modules

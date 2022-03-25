@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from enscale.inputs import embedding_dict_gen, collect_inputs_and_embeddings
+from veloce.inputs import embedding_dict_gen, collect_inputs_and_embeddings
 
 
 class BaseModel(nn.Module):

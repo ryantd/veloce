@@ -1,7 +1,9 @@
+> ‼️ Please note that this library may be recently changed its name and repository address ‼️
+
 <br />
 <div align="center">
-  <a href="https://github.com/ryantd/enscale">
-    <img src="docs/images/logo.png" alt="Enscale Logo">
+  <a href="https://github.com/ryantd/veloce">
+    <img src="docs/images/logo.png" alt="Veloce Logo">
   </a>
 </div>
 <br />
@@ -9,7 +11,7 @@
 > The project is currently under heavy development, and focusing on **PyTorch** and the **recommendation** scenario.
 
 ## About
-**Enscale** is an `instant distributed computing` library based on the **Ray Train** and **Ray Data**, which is scalable, efficient, and easy-to-use. It accelerates the development of any ML/DL training workload, on any cloud or local, at any parallelism size.
+**Veloce** is an `instant distributed computing` library based on the **Ray Train** and **Ray Data**, which is scalable, efficient, and easy-to-use. It accelerates the development of any ML/DL training workload, on any cloud or local, at any parallelism size. Previously named Enscale.
 
 ### Goals
 - Launch any interactive ML/DL workloads **instantly** on your laptop or to any cloud
@@ -36,13 +38,13 @@
 #### Using Pre-compiled Wheels
 ```shell
 # CPU version
-pip install enscale
+pip install veloce
 ```
 
 #### From Source
 ```shell
-git clone https://github.com/ryantd/enscale
-cd enscale
+git clone https://github.com/ryantd/veloce
+cd veloce
 pip install -e .
 ```
 
@@ -67,9 +69,9 @@ The following example requires `sklearn` to be installed. And `tqdm` is optional
 import torch
 import torch.nn as nn
 from sklearn.metrics import roc_auc_score
-from enscale.util import pprint_results, load_benchmark_dataset
-from enscale.model.ctr import DeepFM
-from enscale import NeuralNetTrainer, environ_validate
+from veloce.util import pprint_results, load_benchmark_dataset
+from veloce.model.ctr import DeepFM
+from veloce import NeuralNetTrainer, environ_validate
 
 N_WORKERS = 2
 N_DATA_PROCESSOR = 1
@@ -130,4 +132,4 @@ pprint_results(results)
 - [DeepCTR-Torch](https://github.com/shenweichen/DeepCTR-Torch): Easy-to-use, modular and extendible package of deep-learning based CTR models.
 
 ## License
-Enscale is MIT licensed, as found in the [LICENSE](LICENSE) file.
+Veloce is MIT licensed, as found in the [LICENSE](LICENSE) file.

@@ -1,4 +1,4 @@
-from enscale.preprocessing import DataLoader
+from veloce.preprocessing import DataLoader
 
 BENCHMARK_DATASET_DEFAULT = "examples/dataset/ctr/criteo_mini.txt"
 

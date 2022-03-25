@@ -1,8 +1,8 @@
 import torch.nn as nn
 import torch
 
-from enscale.layer import DNN, OutputLayer, InnerProduct, OuterProduct
-from enscale.inputs import (
+from veloce.layer import DNN, OutputLayer, InnerProduct, OuterProduct
+from veloce.inputs import (
     concat_inputs,
     compute_inputs_dim,
     embedding_dict_gen,

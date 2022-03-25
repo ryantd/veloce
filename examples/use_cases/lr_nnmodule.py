@@ -2,18 +2,18 @@ import torch
 import torch.nn as nn
 from torchmetrics.functional import auroc
 
-from enscale.util import pprint_results
-from enscale.environ import environ_validate
-from enscale.optimizer import FTRL
-from enscale import NeuralNetTrainer
-from enscale.preprocessing import DataLoader
+from veloce.util import pprint_results
+from veloce.environ import environ_validate
+from veloce.optimizer import FTRL
+from veloce import NeuralNetTrainer
+from veloce.preprocessing import DataLoader
 
 """
-A native nn.Module use-case of Enscale
+A native nn.Module use-case of Veloce
 
 What we have in the file:
     1. A Native PyTorch nn.Module.
-    2. Use Enscale's DataLoader to load dataset, define features and do
+    2. Use Veloce's DataLoader to load dataset, define features and do
     preprocessing. This component is leveraged by _Ray Data_.
     3. Use NeuralNetTrainer to launch a data scientist-friendly training
     lifecycle. This component is leveraged by _Ray Train_.

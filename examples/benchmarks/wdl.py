@@ -2,12 +2,12 @@ import torch
 import torch.nn as nn
 from torchmetrics.functional import auroc
 
-from enscale.model.ctr import WideAndDeep
-from enscale.optimizer import OptimizerStack, FTRL
-from enscale.util import pprint_results
-from enscale import NeuralNetTrainer
-from enscale.environ import environ_validate
-from enscale.util import load_benchmark_dataset
+from veloce.model.ctr import WideAndDeep
+from veloce.optimizer import OptimizerStack, FTRL
+from veloce.util import pprint_results
+from veloce import NeuralNetTrainer
+from veloce.environ import environ_validate
+from veloce.util import load_benchmark_dataset
 
 
 def train_wdl_dist(num_workers=2, use_gpu=False, rand_seed=2021):

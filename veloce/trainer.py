@@ -4,9 +4,9 @@ import ray
 from ray.train import Trainer as RayTrainer
 from ray.train.callbacks import JsonLoggerCallback, TBXLoggerCallback
 
-from enscale.train_fn import RecommendationFn
-from enscale.callback import EarlyStoppingCallback
-from enscale.heterogeneous import HeterogeneousStrategy, PSTrainer
+from veloce.train_fn import RecommendationFn
+from veloce.callback import EarlyStoppingCallback
+from veloce.heterogeneous import HeterogeneousStrategy, PSTrainer
 
 callback_mapping = {"json": JsonLoggerCallback, "tbx": TBXLoggerCallback}
 DefaultRun = {}

@@ -2,7 +2,7 @@ from typing import List
 
 import pandas as pd
 
-from enscale.inputs import SparseFeat, DenseFeat
+from veloce.inputs import SparseFeat, DenseFeat
 
 
 class SparseFeatureDef(object):

@@ -2,11 +2,11 @@ import torch
 import torch.nn as nn
 from torchmetrics.functional import auroc
 
-from enscale.model.ctr import FNN
-from enscale.util import pprint_results
-from enscale.environ import environ_validate
-from enscale import NeuralNetTrainer
-from enscale.util import load_benchmark_dataset
+from veloce.model.ctr import FNN
+from veloce.util import pprint_results
+from veloce.environ import environ_validate
+from veloce import NeuralNetTrainer
+from veloce.util import load_benchmark_dataset
 
 
 def train_fnn_dist(num_workers=2, use_gpu=False, rand_seed=2021):
