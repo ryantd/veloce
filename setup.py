@@ -37,8 +37,9 @@ setup(
         "torch>=1.9.1",
         "ray>=1.9.2,<=1.10",
         "pyarrow>=6.0.1",
-        "pandas>=1.3.5,<=1.4.1",
-        "requests>=2.23.0",
+        # "pandas>=1.3.5,<=1.4.1",
+        # "requests>=2.23.0",
+        "loguru>=0.6.0",
     ],
     python_requires=">=3.7.1",
 )
