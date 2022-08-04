@@ -65,22 +65,21 @@ class DataLoader(object):
             convert_options=ConvertOptions(strings_can_be_null=strings_can_be_null),
         )
         self.rand_seed = rand_seed
-        self.feat_order = ("dense", "sparse")
 
     def set_sparse_features(
         self,
-        feat_names,
+        feature_names,
         *,
         use_fillna=True,
         use_label_encoder=True,
         embedding_dim=4,
-        default_fillna_value="-1",
+        fillna_value="-1",
         batch_format="pandas",
     ):
-        self.sparse_feat_names = feat_names
+        self.sparse_feat_names = feature_names
         if use_fillna:
             self.ds = self.ds.map_batches(
-                fillna(self.sparse_feat_names, default_fillna_value),
+                fillna(self.sparse_feat_names, fillna_value),
                 batch_format=batch_format,
             )
         if use_label_encoder:
@@ -103,18 +102,18 @@ class DataLoader(object):
 
     def set_dense_features(
         self,
-        feat_names,
+        feature_names,
         *,
         dim=1,
         use_fillna=True,
         use_minmax_scaler=True,
-        default_fillna_value=0,
+        fillna_value=0,
         batch_format="pandas",
     ):
-        self.dense_feat_names = feat_names
+        self.dense_feat_names = feature_names
         if use_fillna:
             self.ds = self.ds.map_batches(
-                fillna(self.dense_feat_names, default_fillna_value),
+                fillna(self.dense_feat_names, fillna_value),
                 batch_format=batch_format,
             )
         if use_minmax_scaler:
@@ -134,12 +133,6 @@ class DataLoader(object):
 
     def set_label_column(self, label_name):
         self.label_name = label_name
-        return self
-
-    def set_features_order(self, order):
-        if not order or not all([o in {"dense", "sparse"} for o in order]):
-            raise ValueError("Arg order should be given or invalid")
-        self.feat_order = order
         return self
 
     def split(self, valid_split_factor=0.8, return_type="shard_dict"):
@@ -169,6 +162,9 @@ class DataLoader(object):
         return opts
 
     def gen_torch_dataset_options(self):
+        """
+        Deprecated.
+        """
         feature_columns = getattr(self, f"{self.feat_order[0]}_feat_names") + getattr(
             self, f"{self.feat_order[1]}_feat_names"
         )
@@ -183,6 +179,19 @@ class DataLoader(object):
 
 
 def gen_dataset_shards(dataset_pipeline, n_shards, locality_hints):
+    """
+    Deprecated.
+
+    It takes a dataset pipeline and splits it into `n_shards` equal parts, each of
+    which is assigned to a different worker
+    
+    :param dataset_pipeline: a dictionary of dataset names to dataset pipelines
+    :param n_shards: the number of shards to split the dataset into
+    :param locality_hints: a list of strings, each of which is a path to a directory
+    on a local disk
+    :return: A list of dictionaries. Each dictionary contains the data for a single
+    shard.
+    """
     dataset_shards = [dict() for _ in range(n_shards)]
     for k, v in dataset_pipeline.items():
         shards = v.split(n_shards, equal=True, locality_hints=locality_hints)
