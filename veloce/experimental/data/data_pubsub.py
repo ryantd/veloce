@@ -1,8 +1,9 @@
-from typing import Optional
+from typing import Union
+
 import ray
 from pyarrow.csv import ConvertOptions
 
-from .preprocessing import fillna, LabelEncoder
+from .preprocessing import fillna, LabelEncoder, MinMaxScaler
 
 
 class DataPubsub(object):
@@ -43,7 +44,6 @@ class CSVPubsub(FilePubsub):
         *,
         use_fillna=True,
         use_label_encoder=True,
-        embedding_dim=4,
         fillna_value="-1",
     ):
         self.sparse_feat_names = feature_names
@@ -54,5 +54,24 @@ class CSVPubsub(FilePubsub):
         if use_label_encoder:
             self.publisher = self.publisher.map_batches(
                 LabelEncoder(feature_names), batch_format="pyarrow",
+            )
+        return self
+
+    def set_dense_features(
+        self,
+        feature_names,
+        *,
+        use_fillna=True,
+        use_minmax_scaler=True,
+        fillna_value: Union[int, str] = 0,
+    ):
+        self.dense_feat_names = feature_names
+        if use_fillna:
+            self.publisher = self.publisher.map_batches(
+                fillna(feature_names, fillna_value), batch_format="pyarrow",
+            )
+        if use_minmax_scaler:
+            self.publisher = self.publisher.map_batches(
+                MinMaxScaler(feature_names), batch_format="pyarrow",
             )
         return self

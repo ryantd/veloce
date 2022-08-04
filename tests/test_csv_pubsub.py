@@ -23,5 +23,12 @@ def test_csv_pubsub(setup_csv_pubsub):
     assert len(rows) == 200
     assert str(rows[0]["C19"][0]) == "-1"
     setup_csv_pubsub.set_sparse_features(feature_names=[f"C{i}" for i in range(1, 27)], use_label_encoder=True)
-    rows = [i for i in setup_csv_pubsub.subscribe()]
-    assert rows[0]["C1"][0].as_py() == 0
+    first_row = next(setup_csv_pubsub.subscribe())
+    assert first_row["C1"][0].as_py() == 0
+    setup_csv_pubsub.set_dense_features(feature_names=[f"I{i}" for i in range(1, 14)], fillna_value="_min", use_minmax_scaler=False)
+    first_row = next(setup_csv_pubsub.subscribe())
+    assert first_row["I1"][0].as_py() == 0
+    setup_csv_pubsub.set_dense_features(feature_names=[f"I{i}" for i in range(1, 14)], fillna_value="_min", use_minmax_scaler=True)
+    next(setup_csv_pubsub.subscribe())
+    second_row = next(setup_csv_pubsub.subscribe())
+    assert second_row["I2"][0].as_py() == -1
